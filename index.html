@@ -533,8 +533,46 @@ let dFrom='',dTo='';
 let qCents=0,qLoja='',qPlat='',qTurno='';
 
 // PERSIST
-function save(){localStorage.setItem('izuv3',JSON.stringify(APP));}
-function load(){const s=localStorage.getItem('izuv3');if(s){try{APP=JSON.parse(s);}catch(e){}}if(!APP.pedidos)APP.pedidos=[];if(!APP.cancelamentos)APP.cancelamentos=[];if(!APP.lojas)APP.lojas=['Izu Japanese','Izu Poke','Izu Doces'];if(!APP.taxas)APP.taxas={iFood:12,'99Food':15,'Anota Aí':10,Manual:0};if(APP.dark===undefined)APP.dark=true;}
+// PERSIST — chunks de 2000 pedidos para não estourar o localStorage (limite ~5MB)
+const CHUNK=2000;
+function save(){
+  try{
+    // limpa chunks antigos
+    let i=0;while(localStorage.getItem('izu_p'+i)){localStorage.removeItem('izu_p'+i);i++;}
+    // salva metadados (sem pedidos)
+    const meta={cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark};
+    localStorage.setItem('izu_meta',JSON.stringify(meta));
+    // salva pedidos em chunks
+    const chunks=Math.ceil(APP.pedidos.length/CHUNK)||1;
+    localStorage.setItem('izu_chunks',chunks);
+    for(let c=0;c<chunks;c++){
+      localStorage.setItem('izu_p'+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
+    }
+  }catch(e){console.warn('Save error:',e);}
+}
+function load(){
+  // tenta novo formato
+  const meta=localStorage.getItem('izu_meta');
+  if(meta){
+    try{
+      const m=JSON.parse(meta);
+      APP.cancelamentos=m.cancelamentos||[];APP.lojas=m.lojas||['Izu Japanese','Izu Poke','Izu Doces'];
+      APP.taxas=m.taxas||{iFood:0,'99Food':0,'Anota Aí':0,Manual:0};APP.dark=m.dark!==undefined?m.dark:true;
+      const chunks=parseInt(localStorage.getItem('izu_chunks')||'0');
+      APP.pedidos=[];
+      for(let c=0;c<chunks;c++){const ch=localStorage.getItem('izu_p'+c);if(ch)APP.pedidos.push(...JSON.parse(ch));}
+      return;
+    }catch(e){}
+  }
+  // fallback: formato antigo (chave única)
+  const s=localStorage.getItem('izuv3');
+  if(s){try{const old=JSON.parse(s);APP.pedidos=old.pedidos||[];APP.cancelamentos=old.cancelamentos||[];APP.lojas=old.lojas||['Izu Japanese','Izu Poke','Izu Doces'];APP.taxas=old.taxas||{iFood:0,'99Food':0,'Anota Aí':0,Manual:0};APP.dark=old.dark!==undefined?old.dark:true;return;}catch(e){}}
+  // defaults
+  if(!APP.pedidos)APP.pedidos=[];if(!APP.cancelamentos)APP.cancelamentos=[];
+  if(!APP.lojas)APP.lojas=['Izu Japanese','Izu Poke','Izu Doces'];
+  if(!APP.taxas)APP.taxas={iFood:0,'99Food':0,'Anota Aí':0,Manual:0};
+  if(APP.dark===undefined)APP.dark=true;
+}
 
 // THEME
 function applyTheme(){
@@ -933,8 +971,43 @@ document.querySelectorAll('.moverlay').forEach(o=>o.addEventListener('click',e=>
 
 // BACKUP
 function exportDados(){const b=new Blob([JSON.stringify(APP,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='izu-backup-'+today()+'.json';a.click();}
-function importBk(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{APP=JSON.parse(ev.target.result);save();syncStores();refreshAll();notify('Backup restaurado!');}catch{notify('Arquivo inválido','e');}};r.readAsText(f);}
-function apagarTudo(){if(!confirm('Apagar TODOS os dados?'))return;APP.pedidos=[];APP.cancelamentos=[];save();refreshAll();notify('Dados apagados');}
+function importBk(e){
+  const f=e.target.files[0];if(!f)return;
+  notify('Importando... aguarde','s');
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.pedidos&&!d.cancelamentos){notify('Arquivo inválido','e');return;}
+      // Mescla com dados existentes (para importar em partes)
+      const novos=d.pedidos||[];
+      const novosCancel=d.cancelamentos||[];
+      // Evita duplicatas por idPedido+data+loja
+      const existKey=p=>p.data+'|'+p.idPedido+'|'+p.loja;
+      const existSet=new Set(APP.pedidos.map(existKey));
+      const deduped=novos.filter(p=>!existSet.has(existKey(p)));
+      APP.pedidos=[...APP.pedidos,...deduped];
+      // Cancelamentos: apenas adiciona os novos
+      const existCKey=c=>c.data+'|'+c.idPedido+'|'+c.loja;
+      const existCSet=new Set(APP.cancelamentos.map(existCKey));
+      const dedupedC=novosCancel.filter(c=>!existCSet.has(existCKey(c)));
+      APP.cancelamentos=[...APP.cancelamentos,...dedupedC];
+      if(d.lojas)APP.lojas=d.lojas;if(d.taxas)APP.taxas=d.taxas;
+      if(d.dark!==undefined)APP.dark=d.dark;
+      save();syncStores();applyTheme();refreshAll();
+      notify(deduped.length+' pedidos adicionados! Total: '+APP.pedidos.length,'s');
+    }catch(err){notify('Arquivo inválido: '+err.message,'e');}
+  };
+  r.readAsText(f);
+}
+function apagarTudo(){
+  if(!confirm('Apagar TODOS os dados?'))return;
+  APP.pedidos=[];APP.cancelamentos=[];
+  // limpa todas as chaves
+  let i=0;while(localStorage.getItem('izu_p'+i)){localStorage.removeItem('izu_p'+i);i++;}
+  localStorage.removeItem('izu_meta');localStorage.removeItem('izu_chunks');localStorage.removeItem('izuv3');
+  save();refreshAll();notify('Dados apagados');
+}
 
 // DEMO
 function seedDemo(){
