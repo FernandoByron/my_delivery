@@ -2,7 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
 <title>IZU — Gestão Delivery</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -36,7 +39,7 @@
   --shadow:0 4px 24px rgba(0,0,0,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;font-size:14px;line-height:1.6;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;font-size:14px;line-height:1.6;-webkit-text-size-adjust:100%;overscroll-behavior:none;}
 .layout{display:flex;min-height:100vh;}
 .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;}
@@ -106,7 +109,7 @@ tr:hover td{background:var(--bg3);}
 .bp{background:var(--green-bg);color:var(--green);}
 .bd{background:var(--purple-bg);color:var(--purple);}
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 16px;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent;-webkit-tap-highlight-color:transparent;}
 .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
 .btn-primary:hover{background:var(--accent2);}
 .btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2);}
@@ -124,7 +127,7 @@ tr:hover td{background:var(--bg3);}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
 .fgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
 .fg label{font-size:11px;color:var(--text2);font-weight:500;text-transform:uppercase;letter-spacing:.8px;}
-.fg input,.fg select,.fg textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border .15s;width:100%;}
+.fg input,.fg select,.fg textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;transition:border .15s;width:100%;}
 .fg input:focus,.fg select:focus{border-color:var(--accent2);}
 .fhint{font-size:11px;color:var(--text3);}
 .fsec{font-family:var(--font-display);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--accent);margin:16px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--border);}
@@ -161,14 +164,14 @@ tr:hover td{background:var(--bg3);}
 .nk.del{color:var(--red);}
 .nk.clr{color:var(--orange);}
 .platbtns{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
-.pb{padding:9px 7px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;text-align:center;}
+.pb{padding:12px 7px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;text-align:center;-webkit-tap-highlight-color:transparent;}
 .pb:hover{background:var(--bg4);}
 .pb.si{border-color:#e84343;background:rgba(234,67,53,0.12);color:#e84343;}
 .pb.s9{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
 .pb.sa{border-color:var(--purple);background:var(--purple-bg);color:var(--purple);}
 .pb.sm{border-color:var(--green);background:var(--green-bg);color:var(--green);}
 .storebtns{display:grid;gap:5px;}
-.sb{padding:8px 11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-family:var(--font-body);font-size:13px;color:var(--text2);transition:all .15s;}
+.sb{padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;font-family:var(--font-body);font-size:14px;color:var(--text2);transition:all .15s;-webkit-tap-highlight-color:transparent;}
 .sb:hover{background:var(--bg4);}
 .sb.sel{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:500;}
 /* IMPORT */
@@ -196,12 +199,90 @@ tr:hover td{background:var(--bg3);}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
-@media(max-width:800px){
-  .sidebar{width:50px;}
-  .logo-text,.logo-sub,.nav-section,.nav-item span{display:none;}
-  .main{margin-left:50px;}
+/* ── MOBILE APP LAYOUT ── */
+@media(max-width:768px){
+  /* Hide desktop sidebar completely */
+  .sidebar{display:none;}
+  .main{margin-left:0;}
+
+  /* Topbar mobile */
+  .topbar{padding:0 14px;height:50px;}
+  .topbar-title{font-size:14px;}
+  .topbar-right .sel-sm{display:none;} /* store filter goes inside pages */
+
+  /* Date bar scrollable */
+  .datebar{padding:8px 14px;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  .datebar::-webkit-scrollbar{display:none;}
+  .datebar .datesep{display:none;}
+  .dateinp{width:110px;}
+
+  /* Content padding */
+  .content{padding:14px;padding-bottom:80px;} /* bottom padding for tab bar */
+
+  /* Grids stack */
   .grid2,.grid3,.qgrid{grid-template-columns:1fr;}
   .fgrid,.fgrid3{grid-template-columns:1fr;}
+
+  /* Metrics: 2 columns on mobile */
+  .metrics{grid-template-columns:1fr 1fr;gap:9px;}
+  .mc-val{font-size:17px;}
+
+  /* Tables: horizontal scroll */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{font-size:12px;min-width:500px;}
+  th,td{padding:7px 9px;}
+
+  /* Cards */
+  .card-header{padding:11px 14px;flex-wrap:wrap;gap:8px;}
+  .card-body{padding:14px;}
+
+  /* Modal full screen on mobile */
+  .moverlay{padding:0;align-items:flex-end;}
+  .modal{max-width:100% !important;border-radius:var(--radius) var(--radius) 0 0;max-height:92vh;}
+
+  /* Bottom Tab Bar */
+  .tab-bar{display:flex;}
+
+  /* Theme toggle: fix text wrap */
+  #lbl-theme{white-space:nowrap;}
+}
+
+/* Bottom Tab Bar — hidden on desktop */
+.tab-bar{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  z-index:200;
+  padding:0;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tab-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:10px 4px 8px;cursor:pointer;color:var(--text3);transition:color .15s;
+  font-size:10px;font-family:var(--font-body);gap:4px;border:none;background:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.tab-item svg{width:20px;height:20px;flex-shrink:0;}
+.tab-item.active{color:var(--accent);}
+.tab-item span{font-size:10px;font-weight:500;}
+
+/* FAB: Novo pedido button on mobile */
+.fab{
+  display:none;position:fixed;bottom:70px;right:18px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--accent);color:#fff;border:none;
+  font-size:26px;cursor:pointer;z-index:199;
+  box-shadow:0 4px 16px rgba(224,48,48,0.4);
+  align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .15s;
+}
+.fab:active{transform:scale(0.93);}
+@media(max-width:768px){
+  .fab{display:flex;}
+  /* Hide "Novo pedido" button in topbar on mobile */
+  .topbar-right .btn-primary{display:none;}
 }
 </style>
 </head>
@@ -526,6 +607,33 @@ tr:hover td{background:var(--bg3);}
 <div class="notif" id="notif"></div>
 <input type="file" id="bkinp" accept=".json" style="display:none" onchange="importBk(event)">
 
+<!-- BOTTOM TAB BAR (mobile only) -->
+<nav class="tab-bar" id="tab-bar">
+  <button class="tab-item active" onclick="goPageMobile('dashboard',this)" id="tab-dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span>Dashboard</span>
+  </button>
+  <button class="tab-item" onclick="goPageMobile('pedidos',this)" id="tab-pedidos">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    <span>Pedidos</span>
+  </button>
+  <button class="tab-item" onclick="goPageMobile('cancelamentos',this)" id="tab-cancelamentos">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    <span>Cancelados</span>
+  </button>
+  <button class="tab-item" onclick="goPageMobile('relatorio',this)" id="tab-relatorio">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    <span>Relatório</span>
+  </button>
+  <button class="tab-item" onclick="goPageMobile('config',this)" id="tab-config">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M4.93 4.93l1.41 1.41M18.66 18.66l1.41 1.41M2 12h2M20 12h2M12 2v2M12 20v2"/></svg>
+    <span>Mais</span>
+  </button>
+</nav>
+
+<!-- FAB: Novo pedido (mobile) -->
+<button class="fab" onclick="openM('m-pedido')" title="Novo pedido">+</button>
+
 <script>
 // STATE
 let APP={pedidos:[],cancelamentos:[],lojas:['Izu Japanese','Izu Poke','Izu Doces'],taxas:{iFood:12,'99Food':15,'Anota Aí':10,Manual:0},dark:true};
@@ -534,45 +642,68 @@ let dFrom='',dTo='';
 let qCents=0,qLoja='',qPlat='',qTurno='';
 
 // PERSIST
-// PERSIST — chunks de 2000 pedidos para não estourar o localStorage (limite ~5MB)
+// PERSIST — chunks de 2000 pedidos (localStorage tem limite ~5MB por chave)
 const CHUNK=2000;
+const KEY_META='izu_meta', KEY_CHUNKS='izu_chunks', KEY_PFX='izu_p';
+
 function save(){
   try{
-    // limpa chunks antigos
-    let i=0;while(localStorage.getItem('izu_p'+i)){localStorage.removeItem('izu_p'+i);i++;}
-    // salva metadados (sem pedidos)
-    const meta={cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark};
-    localStorage.setItem('izu_meta',JSON.stringify(meta));
-    // salva pedidos em chunks
-    const chunks=Math.ceil(APP.pedidos.length/CHUNK)||1;
-    localStorage.setItem('izu_chunks',chunks);
-    for(let c=0;c<chunks;c++){
-      localStorage.setItem('izu_p'+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
+    // apaga chunks antigos
+    let i=0;while(localStorage.getItem(KEY_PFX+i)!==null){localStorage.removeItem(KEY_PFX+i);i++;}
+    // meta (tudo exceto pedidos, que são grandes)
+    localStorage.setItem(KEY_META,JSON.stringify({
+      cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark
+    }));
+    // pedidos em chunks
+    const total=APP.pedidos.length;
+    const nChunks=total===0?0:Math.ceil(total/CHUNK);
+    localStorage.setItem(KEY_CHUNKS,String(nChunks));
+    for(let c=0;c<nChunks;c++){
+      localStorage.setItem(KEY_PFX+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
     }
-  }catch(e){console.warn('Save error:',e);}
+  }catch(e){console.error('IZU save error:',e);}
 }
+
 function load(){
-  // tenta novo formato
-  const meta=localStorage.getItem('izu_meta');
-  if(meta){
+  APP.pedidos=[];APP.cancelamentos=[];
+  APP.lojas=['Izu Japanese','Izu Poke','Izu Doces'];
+  APP.taxas={iFood:0,'99Food':0,'Anota Aí':0,Manual:0};
+  APP.dark=true;
+
+  const metaRaw=localStorage.getItem(KEY_META);
+  if(metaRaw){
     try{
-      const m=JSON.parse(meta);
-      APP.cancelamentos=m.cancelamentos||[];APP.lojas=m.lojas||['Izu Japanese','Izu Poke','Izu Doces'];
-      APP.taxas=m.taxas||{iFood:0,'99Food':0,'Anota Aí':0,Manual:0};APP.dark=m.dark!==undefined?m.dark:true;
-      const chunks=parseInt(localStorage.getItem('izu_chunks')||'0');
-      APP.pedidos=[];
-      for(let c=0;c<chunks;c++){const ch=localStorage.getItem('izu_p'+c);if(ch)APP.pedidos.push(...JSON.parse(ch));}
-      return;
-    }catch(e){}
+      const m=JSON.parse(metaRaw);
+      if(Array.isArray(m.cancelamentos))APP.cancelamentos=m.cancelamentos;
+      if(Array.isArray(m.lojas)&&m.lojas.length)APP.lojas=m.lojas;
+      if(m.taxas)APP.taxas=m.taxas;
+      if(m.dark!==undefined)APP.dark=m.dark;
+    }catch(e){console.error('IZU meta parse error:',e);}
+    const nChunks=parseInt(localStorage.getItem(KEY_CHUNKS)||'0',10);
+    for(let c=0;c<nChunks;c++){
+      const raw=localStorage.getItem(KEY_PFX+c);
+      if(raw){try{APP.pedidos.push(...JSON.parse(raw));}catch(e){console.error('IZU chunk '+c+' error:',e);}}
+    }
+    console.log('IZU carregado:',APP.pedidos.length,'pedidos,',APP.cancelamentos.length,'cancelamentos');
+    return;
   }
-  // fallback: formato antigo (chave única)
-  const s=localStorage.getItem('izuv3');
-  if(s){try{const old=JSON.parse(s);APP.pedidos=old.pedidos||[];APP.cancelamentos=old.cancelamentos||[];APP.lojas=old.lojas||['Izu Japanese','Izu Poke','Izu Doces'];APP.taxas=old.taxas||{iFood:0,'99Food':0,'Anota Aí':0,Manual:0};APP.dark=old.dark!==undefined?old.dark:true;return;}catch(e){}}
-  // defaults
-  if(!APP.pedidos)APP.pedidos=[];if(!APP.cancelamentos)APP.cancelamentos=[];
-  if(!APP.lojas)APP.lojas=['Izu Japanese','Izu Poke','Izu Doces'];
-  if(!APP.taxas)APP.taxas={iFood:0,'99Food':0,'Anota Aí':0,Manual:0};
-  if(APP.dark===undefined)APP.dark=true;
+
+  // fallback formato antigo (chave única 'izuv3')
+  const legacyRaw=localStorage.getItem('izuv3');
+  if(legacyRaw){
+    try{
+      const old=JSON.parse(legacyRaw);
+      if(Array.isArray(old.pedidos))APP.pedidos=old.pedidos;
+      if(Array.isArray(old.cancelamentos))APP.cancelamentos=old.cancelamentos;
+      if(Array.isArray(old.lojas)&&old.lojas.length)APP.lojas=old.lojas;
+      if(old.taxas)APP.taxas=old.taxas;
+      if(old.dark!==undefined)APP.dark=old.dark;
+      // migra para novo formato
+      save();
+      localStorage.removeItem('izuv3');
+      console.log('IZU migrado do formato antigo:',APP.pedidos.length,'pedidos');
+    }catch(e){console.error('IZU legacy parse error:',e);}
+  }
 }
 
 // THEME
@@ -584,6 +715,8 @@ function applyTheme(){
   if(ic)ic.innerHTML=APP.dark?'<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>':'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   rebuildCharts();
 }
+// Theme toggle also accessible from config page (mobile has no sidebar)
+function toggleDarkFromConfig(){APP.dark=!APP.dark;save();applyTheme();}
 function toggleDark(){APP.dark=!APP.dark;save();applyTheme();}
 
 // DATE
@@ -680,6 +813,21 @@ function goPage(id,el){
   el.classList.add('active');
   document.getElementById('pg-title').textContent=pgTitles[id]||id;
   ({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,taxas:renderTaxas,relatorio:renderRelatorio,config:renderConf}[id]||function(){})();
+}
+// Mobile tab navigation
+function goPageMobile(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  // sync desktop sidebar
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');
+  });
+  document.getElementById('pg-title').textContent=pgTitles[id]||id;
+  ({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,taxas:renderTaxas,relatorio:renderRelatorio,config:renderConf}[id]||function(){})();
+  window.scrollTo(0,0);
 }
 function refreshAll(){const a=document.querySelector('.page.active');if(!a)return;const id=a.id.replace('page-','');({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,relatorio:renderRelatorio}[id]||function(){})();}
 
@@ -1005,29 +1153,16 @@ function apagarTudo(){
   if(!confirm('Apagar TODOS os dados?'))return;
   APP.pedidos=[];APP.cancelamentos=[];
   // limpa todas as chaves
-  let i=0;while(localStorage.getItem('izu_p'+i)){localStorage.removeItem('izu_p'+i);i++;}
-  localStorage.removeItem('izu_meta');localStorage.removeItem('izu_chunks');localStorage.removeItem('izuv3');
+  let i=0;while(localStorage.getItem(KEY_PFX+i)!==null){localStorage.removeItem(KEY_PFX+i);i++;}
+  localStorage.removeItem(KEY_META);localStorage.removeItem(KEY_CHUNKS);localStorage.removeItem('izuv3');
   save();refreshAll();notify('Dados apagados');
 }
 
 // DEMO
-function seedDemo(){
-  if(APP.pedidos.length>0)return;
-  const lojas=['Izu Japanese','Izu Poke','Izu Doces'],plats=['iFood','99Food','Anota Aí','Manual'],txs={iFood:12,'99Food':15,'Anota Aí':10,Manual:0};
-  const items={'Izu Japanese':['Combo salmão','Temaki especial','Sashimi misto'],'Izu Poke':['Bowl proteico','Poke atum','Bowl vegano'],'Izu Doces':['Cheesecake morango','Brownie belga','Torta limão']};
-  for(let d=29;d>=0;d--){
-    for(let q=0;q<Math.floor(Math.random()*4)+2;q++){
-      const l=lojas[Math.floor(Math.random()*3)],pl=plats[Math.floor(Math.random()*(d<3?4:3))];
-      const dt=new Date(Date.now()-d*86400000).toISOString().split('T')[0];
-      APP.pedidos.push({data:dt,loja:l,plataforma:pl,idPedido:'#'+Math.floor(10000+Math.random()*90000),desc:items[l][Math.floor(Math.random()*3)],valor:Math.round((25+Math.random()*100)*100)/100,taxa:txs[pl]||0,taxaEntrega:pl!=='Manual'?(Math.random()<0.5?5:8):0,status:Math.random()<0.93?'Entregue':(Math.random()<0.5?'Pendente':'Cancelado')});
-    }
-  }
-  APP.cancelamentos=[{data:ago(4),loja:'Izu Japanese',plataforma:'iFood',idPedido:'#38291',motivo:'Cliente desistiu',valor:52.90,recuperado:0,contestacao:'Não',obs:''},{data:ago(9),loja:'Izu Poke',plataforma:'99Food',idPedido:'#47102',motivo:'Produto indisponível',valor:38.00,recuperado:38.00,contestacao:'Aprovada',obs:'Aprovada após 3 dias'},{data:ago(14),loja:'Izu Doces',plataforma:'Anota Aí',idPedido:'#55830',motivo:'Problema na entrega',valor:65.00,recuperado:32.50,contestacao:'Aprovada',obs:'50% aprovado'}];
-  save();
-}
+// seedDemo removido — sistema em produção
 
 // INIT
-load();initDates();applyTheme();seedDemo();syncStores();renderDash();
+load();initDates();applyTheme();syncStores();renderDash();
 // Dropzone drag
 const dz=document.getElementById('dropzone');
 if(dz){dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f){document.getElementById('finp').files=e.dataTransfer.files;handleImport({target:{files:e.dataTransfer.files}});}});}
