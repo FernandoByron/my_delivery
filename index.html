@@ -291,7 +291,7 @@ tr:hover td{background:var(--bg3);}
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title">Pedidos recentes</span></div>
-      <div class="tw"><table><thead><tr><th>Data</th><th>Loja</th><th>Plataforma</th><th>ID</th><th>Bruto</th><th>Taxa plat.</th><th>Taxa entrega</th><th>Líquido</th><th>Status</th></tr></thead><tbody id="d-recent"></tbody></table></div>
+      <div class="tw"><table><thead><tr><th>Data</th><th>Turno</th><th>Loja</th><th>Plataforma</th><th>ID</th><th>Bruto</th><th>Status</th></tr></thead><tbody id="d-recent"></tbody></table></div>
     </div>
   </div>
 
@@ -305,7 +305,7 @@ tr:hover td{background:var(--bg3);}
           <select class="sel-sm" id="fp-st" onchange="renderPeds()" style="font-size:12px;padding:5px 8px;"><option value="">Todos status</option><option>Entregue</option><option>Pendente</option><option>Cancelado</option></select>
         </div>
       </div>
-      <div class="tw"><table><thead><tr><th>Data</th><th>Loja</th><th>Plataforma</th><th>ID</th><th>Desc.</th><th>Bruto</th><th>Taxa plat.</th><th>Taxa entrega</th><th>Líquido</th><th>Status</th><th></th></tr></thead><tbody id="tb-peds"></tbody></table></div>
+      <div class="tw"><table><thead><tr><th>Data</th><th>Turno</th><th>Loja</th><th>Plataforma</th><th>ID</th><th>Desc.</th><th>Bruto</th><th>Status</th><th></th></tr></thead><tbody id="tb-peds"></tbody></table></div>
     </div>
   </div>
 
@@ -423,43 +423,57 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MODAL: NOVO PEDIDO (caixa) -->
 <div class="moverlay" id="m-pedido">
-  <div class="modal">
+  <div class="modal" style="max-width:420px;">
     <div class="mhdr"><span class="mtitle">Novo pedido</span><button class="bicon" onclick="closeM('m-pedido')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="mbody">
-      <div style="background:var(--bg3);border-radius:var(--radius);padding:15px 18px;margin-bottom:15px;text-align:center;">
-        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Valor do pedido</div>
-        <div class="qval" id="qv-display">R$ 0,00</div>
-        <div class="qhint">Toque nos números — vírgula entra automático</div>
-        <div class="npad">
-          <div class="nk" onclick="np(1)">1</div><div class="nk" onclick="np(2)">2</div><div class="nk" onclick="np(3)">3</div>
-          <div class="nk" onclick="np(4)">4</div><div class="nk" onclick="np(5)">5</div><div class="nk" onclick="np(6)">6</div>
-          <div class="nk" onclick="np(7)">7</div><div class="nk" onclick="np(8)">8</div><div class="nk" onclick="np(9)">9</div>
-          <div class="nk clr" onclick="np('C')">C</div><div class="nk" onclick="np(0)">0</div><div class="nk del" onclick="np('X')">⌫</div>
+    <div class="mbody" style="display:flex;flex-direction:column;gap:14px;">
+
+      <!-- VALOR -->
+      <div class="fg">
+        <label>Valor do pedido (R$)</label>
+        <div class="cwrap">
+          <span class="cpfx">R$</span>
+          <input type="tel" inputmode="numeric" id="q-val-d" placeholder="0,00"
+            oninput="parseCur(this,'q-val-r')"
+            style="font-size:22px;font-family:var(--font-display);font-weight:700;padding-left:38px;padding-top:10px;padding-bottom:10px;color:var(--accent);"
+            autocomplete="off">
+        </div>
+        <input type="hidden" id="q-val-r">
+        <span class="fhint">Digite os números — a vírgula entra automática</span>
+      </div>
+
+      <!-- TURNO -->
+      <div>
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">Turno</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;" id="q-turnos">
+          <div class="pb" id="tb-manha" onclick="selTurno(this,'manha')"><div style="font-size:16px;">☀️</div><div style="font-size:12px;font-weight:600;">Manhã</div><div style="font-size:10px;color:var(--text3);">08:00–11:59</div></div>
+          <div class="pb" id="tb-tarde" onclick="selTurno(this,'tarde')"><div style="font-size:16px;">🌤️</div><div style="font-size:12px;font-weight:600;">Tarde</div><div style="font-size:10px;color:var(--text3);">12:00–17:59</div></div>
+          <div class="pb" id="tb-noite" onclick="selTurno(this,'noite')"><div style="font-size:16px;">🌙</div><div style="font-size:12px;font-weight:600;">Noite</div><div style="font-size:10px;color:var(--text3);">18:00–03:59</div></div>
         </div>
       </div>
-      <div class="qgrid">
-        <div>
-          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">Loja</div>
-          <div class="storebtns" id="q-stores"></div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">Plataforma</div>
-          <div class="platbtns" id="q-plats">
-            <div class="pb" onclick="selP(this,'iFood')">iFood</div>
-            <div class="pb" onclick="selP(this,'99Food')">99Food</div>
-            <div class="pb" onclick="selP(this,'Anota Aí')">Anota Aí</div>
-            <div class="pb" onclick="selP(this,'Manual')">Manual</div>
-          </div>
+
+      <!-- LOJA -->
+      <div>
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">Loja</div>
+        <div class="storebtns" id="q-stores"></div>
+      </div>
+
+      <!-- PLATAFORMA -->
+      <div>
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">Plataforma</div>
+        <div class="platbtns" id="q-plats">
+          <div class="pb" onclick="selP(this,'iFood')">iFood</div>
+          <div class="pb" onclick="selP(this,'99Food')">99Food</div>
+          <div class="pb" onclick="selP(this,'Anota Aí')">Anota Aí</div>
+          <div class="pb" onclick="selP(this,'Manual')">Manual</div>
         </div>
       </div>
-      <div style="margin-top:12px;" class="fg">
+
+      <!-- ID -->
+      <div class="fg">
         <label>ID do pedido <span style="color:var(--text3);font-weight:400;text-transform:none;font-size:10px;">(opcional)</span></label>
         <input type="text" id="q-id" placeholder="#12345" autocomplete="off">
       </div>
-      <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:9px 13px;margin-top:12px;display:flex;justify-content:space-between;">
-        <span style="font-size:12px;color:var(--text2);">Taxa: <span id="q-taxa-info">—</span></span>
-        <span style="font-size:12px;color:var(--text2);">Líquido estimado: <span id="q-liq-info" style="color:var(--green);font-weight:600;">—</span></span>
-      </div>
+
     </div>
     <div class="mftr">
       <button class="btn btn-ghost" onclick="closeM('m-pedido')">Fechar</button>
@@ -516,7 +530,7 @@ tr:hover td{background:var(--bg3);}
 let APP={pedidos:[],cancelamentos:[],lojas:['Izu Japanese','Izu Poke','Izu Doces'],taxas:{iFood:12,'99Food':15,'Anota Aí':10,Manual:0},dark:true};
 let charts={},cview='rev',impData={};
 let dFrom='',dTo='';
-let qCents=0,qLoja='',qPlat='';
+let qCents=0,qLoja='',qPlat='',qTurno='';
 
 // PERSIST
 function save(){localStorage.setItem('izuv3',JSON.stringify(APP));}
@@ -534,11 +548,17 @@ function applyTheme(){
 function toggleDark(){APP.dark=!APP.dark;save();applyTheme();}
 
 // DATE
-function today(){return new Date().toISOString().split('T')[0];}
-function ago(n){return new Date(Date.now()-n*86400000).toISOString().split('T')[0];}
-function mStart(off){const d=new Date();d.setDate(1);if(off)d.setMonth(d.getMonth()+off);return d.toISOString().split('T')[0];}
-function mEnd(off){const d=new Date();d.setDate(1);if(off)d.setMonth(d.getMonth()+off);d.setMonth(d.getMonth()+1);d.setDate(0);return d.toISOString().split('T')[0];}
-function wStart(){const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().split('T')[0];}
+// DATE — local timezone (corrige bug de "amanhã" causado por UTC)
+function localDateStr(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd;}
+function today(){return localDateStr(new Date());}
+function ago(n){const d=new Date();d.setDate(d.getDate()-n);return localDateStr(d);}
+function mStart(off){const d=new Date();d.setDate(1);if(off)d.setMonth(d.getMonth()+off);return localDateStr(d);}
+function mEnd(off){const d=new Date();d.setDate(1);if(off)d.setMonth(d.getMonth()+off);d.setMonth(d.getMonth()+1);d.setDate(0);return localDateStr(d);}
+function wStart(){const d=new Date();d.setDate(d.getDate()-d.getDay());return localDateStr(d);}
+// TURNOS: Manha 08-11:59 | Tarde 12-17:59 | Noite 18-03:59
+const TURNOS=[{id:'manha',label:'Manha',emoji:'☀️',sub:'08:00–11:59'},{id:'tarde',label:'Tarde',emoji:'🌤️',sub:'12:00–17:59'},{id:'noite',label:'Noite',emoji:'🌙',sub:'18:00–03:59'}];
+function turnoAtual(){const h=new Date().getHours();if(h>=8&&h<12)return'manha';if(h>=12&&h<18)return'tarde';return'noite';}
+function turnoDate(){const h=new Date().getHours();return h<4?ago(1):today();}
 function inRange(ds){if(!dFrom&&!dTo)return true;const d=ds||'';if(dFrom&&d<dFrom)return false;if(dTo&&d>dTo)return false;return true;}
 function initDates(){dFrom=mStart();dTo=today();document.getElementById('d-from').value=dFrom;document.getElementById('d-to').value=dTo;}
 function setChip(mode,el){
@@ -562,6 +582,7 @@ function platBadge(p){const m={iFood:'bi','99Food':'b9','Anota Aí':'ba',Manual:
 function stBadge(s){const m={Entregue:'bent',Cancelado:'bcan',Contestado:'bcont',Pendente:'bpend'};return`<span class="badge ${m[s]||'bpend'}">${s}</span>`;}
 function storeBadge(s){const m={'Izu Japanese':'bj','Izu Poke':'bp','Izu Doces':'bd'};return`<span class="badge ${m[s]||'bm'}">${s}</span>`;}
 function contBadge(c){if(c==='Aprovada')return'<span class="badge bent">Aprovada</span>';if(c==='Negada')return'<span class="badge bcan">Negada</span>';if(c==='Em andamento')return'<span class="badge bpend">Em andamento</span>';return'<span class="badge" style="background:var(--bg4);color:var(--text3)">—</span>';}
+function turnoBadge(t){const m={manha:'☀️ Manhã',tarde:'🌤️ Tarde',noite:'🌙 Noite'};return t?'<span style="font-size:12px;color:var(--text2)">'+( m[t]||t)+'</span>':'<span style="color:var(--text3)">—</span>';}
 function notify(msg,t='s'){const el=document.getElementById('notif');el.textContent=msg;el.className=`notif ${t==='s'?'ns':'ne'} show`;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3000);}
 
 // CURRENCY INPUT - no manual comma needed
@@ -603,6 +624,8 @@ function selP(el,p){
   updateQLiq();
 }
 function selS(el,s){qLoja=s;document.querySelectorAll('#q-stores .sb').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function selTurno(el,t){qTurno=t;document.querySelectorAll('#q-turnos .pb').forEach(b=>b.classList.remove('sel','si','s9','sa','sm'));el.classList.add('sel');}
+function initTurnos(){qTurno=turnoAtual();['manha','tarde','noite'].forEach(t=>{const el=document.getElementById('tb-'+t);if(el)el.classList.remove('sel');});const active=document.getElementById('tb-'+qTurno);if(active)active.classList.add('sel');}
 function renderQStores(){
   const c=document.getElementById('q-stores');if(!c)return;
   c.innerHTML=APP.lojas.map(l=>`<div class="sb" onclick="selS(this,'${l}')">${l}</div>`).join('');
@@ -666,7 +689,7 @@ function renderDash(){
   const ts={};d.forEach(p=>{if(!ts[p.loja])ts[p.loja]={s:0,n:0};ts[p.loja].s+=p.valor||0;ts[p.loja].n++;});
   document.getElementById('d-ticket').innerHTML=Object.entries(ts).map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">${storeBadge(l)}<span style="font-weight:500;color:var(--accent)">${fmtR(v.n?v.s/v.n:0)}</span></div>`).join('')||'<p style="color:var(--text3);font-size:13px">Sem dados</p>';
   // recent
-  document.getElementById('d-recent').innerHTML=[...d].reverse().slice(0,8).map(p=>`<tr><td>${p.data}</td><td>${storeBadge(p.loja)}</td><td>${platBadge(p.plataforma)}</td><td style="color:var(--text3);font-size:12px">${p.idPedido||'—'}</td><td>${fmtR(p.valor)}</td><td style="color:var(--red)">${fmtR((p.valor||0)*(p.taxa||0)/100)}<span style="color:var(--text3);font-size:11px"> ${p.taxa||0}%</span></td><td style="color:var(--blue)">${fmtR(p.taxaEntrega||0)}</td><td style="color:var(--green);font-weight:600">${fmtR(liq(p))}</td><td>${stBadge(p.status)}</td></tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">Nenhum pedido no período</td></tr>';
+  document.getElementById('d-recent').innerHTML=[...d].reverse().slice(0,8).map(p=>`<tr><td>${p.data}</td><td>${turnoBadge(p.turno)}</td><td>${storeBadge(p.loja)}</td><td>${platBadge(p.plataforma)}</td><td style="color:var(--text3);font-size:12px">${p.idPedido||'—'}</td><td>${fmtR(p.valor)}</td><td>${stBadge(p.status)}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Nenhum pedido no período</td></tr>';
 }
 
 // CHARTS
@@ -702,8 +725,8 @@ function renderPeds(){
   });
   document.getElementById('tb-peds').innerHTML=arr.map((p,ri)=>{
     const idx=APP.pedidos.length-1-ri;
-    return`<tr><td>${p.data}</td><td>${storeBadge(p.loja)}</td><td>${platBadge(p.plataforma)}</td><td style="font-size:12px;color:var(--text3)">${p.idPedido||'—'}</td><td style="font-size:12px;color:var(--text2)">${p.desc||'—'}</td><td>${fmtR(p.valor)}</td><td style="color:var(--red)">${p.taxa||0}%</td><td style="color:var(--blue)">${fmtR(p.taxaEntrega||0)}</td><td style="color:var(--green);font-weight:600">${fmtR(liq(p))}</td><td>${stBadge(p.status)}</td><td style="white-space:nowrap;">${p.status!=='Cancelado'?`<button class="qcancel" onclick="cancelDireto(${idx})">Cancelar</button>`:''} <button class="btn btn-ghost btn-sm" onclick="excluirPed(${idx})">×</button></td></tr>`;
-  }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:24px">Nenhum pedido encontrado</td></tr>';
+    return`<tr><td>${p.data}</td><td>${turnoBadge(p.turno)}</td><td>${storeBadge(p.loja)}</td><td>${platBadge(p.plataforma)}</td><td style="font-size:12px;color:var(--text3)">${p.idPedido||'—'}</td><td style="font-size:12px;color:var(--text2)">${p.desc||'—'}</td><td>${fmtR(p.valor)}</td><td>${stBadge(p.status)}</td><td style="white-space:nowrap;">${p.status!=='Cancelado'?`<button class="qcancel" onclick="cancelDireto(${idx})">Cancelar</button>`:''} <button class="btn btn-ghost btn-sm" onclick="excluirPed(${idx})">×</button></td></tr>`;
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:24px">Nenhum pedido encontrado</td></tr>';
 }
 function cancelDireto(idx){
   const p=APP.pedidos[idx];if(!p||!confirm('Marcar como cancelado?'))return;
@@ -776,11 +799,14 @@ function salvarCancel(){
 function delCancel(idx){if(!confirm('Excluir?'))return;APP.cancelamentos.splice(idx,1);save();renderCancels();notify('Excluído');}
 
 // QUICK ORDER
+function getQVal(){return getValFromHidden('q-val-r')||getValFromDisp('q-val-d');}
 function salvarPed(status){
   if(!qLoja){notify('Selecione a loja','e');return;}
   if(!qPlat){notify('Selecione a plataforma','e');return;}
-  if(qCents<=0){notify('Digite o valor','e');return;}
-  APP.pedidos.push({data:today(),loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:qCents/100,taxa:APP.taxas[qPlat]||0,taxaEntrega:0,status});
+  if(!qTurno){notify('Selecione o turno','e');return;}
+  const val=getQVal();
+  if(val<=0){notify('Digite o valor','e');return;}
+  APP.pedidos.push({data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status});
   save();closeM('m-pedido');notify(status==='Entregue'?'Pedido salvo!':'Salvo como cancelado!');
   if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
   if(document.getElementById('page-pedidos').classList.contains('active'))renderPeds();
@@ -788,11 +814,12 @@ function salvarPed(status){
 function salvarCancelado(){
   if(!qLoja){notify('Selecione a loja','e');return;}
   if(!qPlat){notify('Selecione a plataforma','e');return;}
-  if(qCents<=0){notify('Digite o valor','e');return;}
-  const val=qCents/100,pid=document.getElementById('q-id').value.trim();
-  APP.pedidos.push({data:today(),loja:qLoja,plataforma:qPlat,idPedido:pid,desc:'',valor:val,taxa:APP.taxas[qPlat]||0,taxaEntrega:0,status:'Cancelado'});
+  if(!qTurno){notify('Selecione o turno','e');return;}
+  const val=getQVal();
+  if(val<=0){notify('Digite o valor','e');return;}
+  const pid=document.getElementById('q-id').value.trim();
+  APP.pedidos.push({data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:pid,desc:'',valor:val,taxa:0,taxaEntrega:0,status:'Cancelado'});
   save();closeM('m-pedido');
-  // Pre-fill cancel modal
   document.getElementById('c-idx').value='';
   document.getElementById('mc-title').textContent='Registrar cancelamento';
   document.getElementById('c-data').value=today();
@@ -889,7 +916,17 @@ function syncStores(){
 // MODAL
 function openM(id){
   document.getElementById(id).classList.add('open');
-  if(id==='m-pedido'){qCents=0;qPlat='';qLoja=APP.lojas[0]||'';document.getElementById('qv-display').textContent='R$ 0,00';document.getElementById('q-id').value='';document.getElementById('q-taxa-info').textContent='—';document.getElementById('q-liq-info').textContent='—';document.querySelectorAll('#q-plats .pb').forEach(b=>b.className='pb');renderQStores();}
+  if(id==='m-pedido'){
+    qPlat='';qLoja=APP.lojas[0]||'';
+    const vd=document.getElementById('q-val-d');if(vd)vd.value='';
+    const vr=document.getElementById('q-val-r');if(vr)vr.value='0';
+    document.getElementById('q-id').value='';
+    document.querySelectorAll('#q-plats .pb').forEach(b=>b.className='pb');
+    renderQStores();
+    initTurnos();
+    // focus value field
+    setTimeout(()=>{if(vd)vd.focus();},100);
+  }
 }
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.moverlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
