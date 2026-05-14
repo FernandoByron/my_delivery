@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IZU — Gestão Delivery</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --bg2: #161616;
+    --bg3: #1f1f1f;
+    --bg4: #2a2a2a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede8;
+    --text2: #9a9590;
+    --text3: #5a5652;
+    --accent: #e8c97a;
+    --accent2: #c4a45a;
+    --accent-bg: rgba(232,201,122,0.1);
+    --red: #e87a7a;
+    --red-bg: rgba(232,122,122,0.12);
+    --green: #7ac49e;
+    --green-bg: rgba(122,196,158,0.12);
+    --blue: #7aaee8;
+    --blue-bg: rgba(122,174,232,0.12);
+    --orange: #e8a87a;
+    --orange-bg: rgba(232,168,122,0.12);
+    --purple: #b07ae8;
+    --purple-bg: rgba(176,122,232,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .light {
+    --bg: #f5f2ed;
+    --bg2: #ffffff;
+    --bg3: #eceae5;
+    --bg4: #e0ddd8;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1a1814;
+    --text2: #6b6560;
+    --text3: #a09b96;
+    --accent: #9a7020;
+    --accent2: #b88a30;
+    --accent-bg: rgba(154,112,32,0.1);
+    --red: #c0404040;
+    --red-bg: rgba(192,64,64,0.1);
+    --green: #2a7a5a;
+    --green-bg: rgba(42,122,90,0.1);
+    --blue: #2a5ab0;
+    --blue-bg: rgba(42,90,176,0.1);
+    --orange: #a06020;
+    --orange-bg: rgba(160,96,32,0.1);
+    --purple: #6a2aa0;
+    --purple-bg: rgba(106,42,160,0.1);
+    --shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transition: background 0.3s;
+  }
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+  }
+  .content { padding: 28px; flex: 1; }
+
+  /* LOGO */
+  .logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-text {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* NAV */
+  .nav { padding: 16px 12px; flex: 1; }
+  .nav-section { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); padding: 0 8px; margin: 16px 0 6px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* TOPBAR */
+  .topbar-title { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .store-select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+  .period-select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+  .btn-icon {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { background: var(--bg4); color: var(--text); }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* METRICS GRID */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 24px; }
+  .metric-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .metric-card.gold::before { background: var(--accent); }
+  .metric-card.red::before { background: var(--red); }
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.blue::before { background: var(--blue); }
+  .metric-card.orange::before { background: var(--orange); }
+  .metric-card.purple::before { background: var(--purple); }
+  .metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .metric-value { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text); }
+  .metric-value.gold { color: var(--accent); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 18px;
+    transition: background 0.3s;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-body { padding: 20px; }
+
+  /* GRID */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .badge-ifood { background: rgba(234,67,53,0.15); color: #e84343; }
+  .badge-99food { background: var(--blue-bg); color: var(--blue); }
+  .badge-anotaai { background: var(--purple-bg); color: var(--purple); }
+  .badge-manual { background: var(--green-bg); color: var(--green); }
+  .badge-entregue { background: var(--green-bg); color: var(--green); }
+  .badge-cancelado { background: var(--red-bg); color: var(--red); }
+  .badge-contestado { background: var(--orange-bg); color: var(--orange); }
+  .badge-pendente { background: var(--accent-bg); color: var(--accent); }
+  .badge-izu-japanese { background: var(--blue-bg); color: var(--blue); }
+  .badge-izu-poke { background: var(--green-bg); color: var(--green); }
+  .badge-izu-doces { background: var(--purple-bg); color: var(--purple); }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-size: 12px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+    transition: border 0.15s;
+    width: 100%;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent2);
+  }
+  .form-section-title {
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin: 20px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent); color: #1a1400; border-color: var(--accent); }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost { background: transparent; color: var(--text2); border-color: var(--border2); }
+  .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+  .btn-danger { background: var(--red-bg); color: var(--red); border-color: rgba(232,122,122,0.2); }
+  .btn-danger:hover { background: rgba(232,122,122,0.2); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+  /* CHARTS */
+  .chart-container { position: relative; width: 100%; }
+
+  /* ALERTS */
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .alert-info { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(122,174,232,0.2); }
+  .alert-warning { background: var(--orange-bg); color: var(--orange); border: 1px solid rgba(232,168,122,0.2); }
+  .alert-success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(122,196,158,0.2); }
+
+  /* TOGGLE */
+  .toggle {
+    display: flex; align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .toggle-opt {
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+  .toggle-opt.active { background: var(--accent); color: #1a1400; font-weight: 500; }
+
+  /* SETTINGS */
+  .settings-section { margin-bottom: 28px; }
+  .settings-section h3 { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-label { font-size: 14px; color: var(--text); }
+  .setting-desc { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .switch {
+    width: 42px; height: 24px;
+    background: var(--bg4);
+    border-radius: 100px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: 1px solid var(--border2);
+  }
+  .switch.on { background: var(--accent); border-color: var(--accent); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 18px; height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: left 0.2s;
+  }
+  .switch.on::after { left: 20px; }
+
+  /* IMPORT */
+  .dropzone {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text3);
+  }
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+  .dropzone svg { width: 36px; height: 36px; margin: 0 auto 12px; display: block; }
+  .dropzone-title { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .dropzone-sub { font-size: 12px; }
+
+  /* COLUMN MAPPER */
+  .mapper-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 8px; font-size: 13px; }
+  .mapper-arrow { color: var(--text3); }
+  .mapper-field { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text); }
+  .mapper-select { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 7px 10px; color: var(--text); font-family: var(--font-body); font-size: 13px; outline: none; width: 100%; }
+
+  /* PLATFORM COLORS */
+  .platform-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-ifood { background: #e84343; }
+  .dot-99food { background: var(--blue); }
+  .dot-anotaai { background: var(--purple); }
+  .dot-manual { background: var(--green); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .logo-text, .logo-sub, .nav-section, .nav-item span { display: none; }
+    .main { margin-left: 60px; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .page.active { animation: fadeIn 0.2s ease; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 48px 20px; color: var(--text3); }
+  .empty svg { width: 48px; height: 48px; margin: 0 auto 12px; display: block; opacity: 0.4; }
+  .empty p { font-size: 14px; }
+
+  /* TAG */
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-store { background: var(--bg4); color: var(--text2); }
+
+  /* PROFIT BAR */
+  .profit-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .profit-bar-fill { height: 100%; border-radius: 3px; background: var(--green); }
+
+  /* NOTIFICATION */
+  .notif {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    z-index: 9999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    max-width: 300px;
+  }
+  .notif.show { transform: translateY(0); opacity: 1; }
+  .notif-success { border-left: 3px solid var(--green); }
+  .notif-error { border-left: 3px solid var(--red); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">IZU</div>
+      <div class="logo-sub">Gestão Delivery</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="goPage('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="goPage('pedidos', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span>Pedidos</span>
+      </div>
+      <div class="nav-item" onclick="goPage('cancelamentos', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <span>Cancelamentos</span>
+      </div>
+      <div class="nav-section">Financeiro</div>
+      <div class="nav-item" onclick="goPage('taxas', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <span>Taxas e Custos</span>
+      </div>
+      <div class="nav-item" onclick="goPage('relatorio', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span>Relatórios</span>
+      </div>
+      <div class="nav-section">Sistema</div>
+      <div class="nav-item" onclick="goPage('importar', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span>Importar</span>
+      </div>
+      <div class="nav-item" onclick="goPage('configuracoes', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M5.34 18.66l-1.41 1.41M4.93 4.93l1.41 1.41M18.66 18.66l1.41 1.41M2 12h2M20 12h2M12 2v2M12 20v2"/></svg>
+        <span>Configurações</span>
+      </div>
+    </nav>
+    <div style="padding: 12px; border-top: 1px solid var(--border);">
+      <div class="btn-icon" style="width:100%; height:36px; gap:8px; color:var(--text2); font-size:12px;" onclick="toggleDarkMode()">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        <span style="font-size:12px; color:var(--text2);" id="theme-label">Modo claro</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <span class="topbar-title" id="page-title">Dashboard</span>
+      <div class="topbar-right">
+        <select class="store-select" id="global-store" onchange="refreshAll()">
+          <option value="todas">Todas as lojas</option>
+          <option value="Izu Japanese">Izu Japanese</option>
+          <option value="Izu Poke">Izu Poke</option>
+          <option value="Izu Doces">Izu Doces</option>
+        </select>
+        <select class="period-select" id="global-period" onchange="refreshAll()">
+          <option value="7">Últimos 7 dias</option>
+          <option value="30" selected>Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+          <option value="365">Último ano</option>
+          <option value="all">Todos</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-novo-pedido')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo pedido
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="metrics" id="dash-metrics"></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Receita por plataforma</span>
+              <div class="toggle" id="chart-toggle">
+                <div class="toggle-opt active" onclick="setChartView('revenue',this)">Receita</div>
+                <div class="toggle-opt" onclick="setChartView('orders',this)">Pedidos</div>
+              </div>
+            </div>
+            <div class="card-body"><div class="chart-container" style="height:220px"><canvas id="chart-platform"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Receita por loja</span></div>
+            <div class="card-body"><div class="chart-container" style="height:220px"><canvas id="chart-store"></canvas></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Receita diária (líquida)</span></div>
+          <div class="card-body"><div class="chart-container" style="height:200px"><canvas id="chart-daily"></canvas></div></div>
+        </div>
+        <div class="grid3">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Taxas por plataforma</span></div>
+            <div class="card-body" id="dash-platform-fees"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Cancelamentos</span></div>
+            <div class="card-body" id="dash-cancels"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Ticket médio por loja</span></div>
+            <div class="card-body" id="dash-ticket"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Pedidos recentes</span></div>
+          <div class="table-wrap"><table><thead><tr><th>Data</th><th>Loja</th><th>Plataforma</th><th>Descrição</th><th>Bruto</th><th>Taxa plat.</th><th>Taxa entrega</th><th>Líquido</th><th>Status</th></tr></thead><tbody id="dash-recent"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ PEDIDOS ═══════════════════ -->
+      <div class="page" id="page-pedidos">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Todos os pedidos</span>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="search-pedidos" placeholder="Buscar..." style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;width:180px;" oninput="renderPedidos()">
+              <select class="store-select" id="filter-platform" onchange="renderPedidos()">
+                <option value="">Todas plataformas</option>
+                <option value="iFood">iFood</option>
+                <option value="99Food">99Food</option>
+                <option value="Anota Aí">Anota Aí</option>
+                <option value="Manual">Manual</option>
+              </select>
+              <select class="store-select" id="filter-status" onchange="renderPedidos()">
+                <option value="">Todos status</option>
+                <option value="Entregue">Entregue</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Cancelado">Cancelado</option>
+                <option value="Contestado">Contestado</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Loja</th><th>Plataforma</th><th>Descrição</th><th>Bruto</th><th>Taxa plat. %</th><th>Taxa entrega</th><th>Líquido</th><th>Status</th><th></th></tr></thead>
+              <tbody id="tbody-pedidos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ CANCELAMENTOS ═══════════════════ -->
+      <div class="page" id="page-cancelamentos">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>Em casos de contestação aprovada, registre o valor efetivamente recebido da plataforma no campo "Valor recuperado". O sistema calcula automaticamente a perda real.</div>
+        </div>
+        <div class="metrics" id="cancel-metrics"></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Histórico de cancelamentos</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Loja</th><th>Plataforma</th><th>Motivo</th><th>Valor pedido</th><th>Valor recuperado</th><th>Perda real</th><th>Contestação</th></tr></thead>
+              <tbody id="tbody-cancelamentos"></tbody>
+            </table>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-cancel')">+ Registrar cancelamento</button>
+      </div>
+
+      <!-- ═══════════════════ TAXAS ═══════════════════ -->
+      <div class="page" id="page-taxas">
+        <div class="alert alert-warning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div>As taxas de entrega podem variar por distância. Configure aqui as taxas padrão de cada plataforma — você pode sobrescrever no cadastro de cada pedido.</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Taxas de comissão por plataforma</span></div>
+          <div class="card-body">
+            <div id="taxas-plataformas"></div>
+            <button class="btn btn-primary" style="margin-top:16px;" onclick="salvarTaxas()">Salvar taxas</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Taxa de entrega — faixas por distância</span></div>
+          <div class="card-body">
+            <div class="alert alert-info" style="margin-bottom:16px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div>Enquanto não souber o valor exato por distância, você pode registrar a taxa de entrega individualmente em cada pedido. Aqui, configure faixas aproximadas para referência.</div>
+            </div>
+            <div id="faixas-entrega"></div>
+            <button class="btn btn-ghost btn-sm" style="margin-top:12px;" onclick="addFaixaEntrega()">+ Adicionar faixa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ RELATÓRIOS ═══════════════════ -->
+      <div class="page" id="page-relatorio">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">DRE Simplificado</span></div>
+            <div class="card-body" id="dre-body"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Performance por loja</span></div>
+            <div class="card-body" id="perf-lojas"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Comparativo de plataformas</span></div>
+          <div class="card-body" id="comp-plataformas"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ IMPORTAR ═══════════════════ -->
+      <div class="page" id="page-importar">
+        <div class="alert alert-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>Exporte o relatório do iFood, 99Food ou Anota Aí em Excel (.xlsx ou .xlsm). O sistema mostrará as colunas encontradas e você faz o mapeamento para os campos corretos.</div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Importar planilha</span>
+            <select class="store-select" id="import-platform">
+              <option value="iFood">iFood</option>
+              <option value="99Food">99Food</option>
+              <option value="Anota Aí">Anota Aí</option>
+              <option value="Manual">Outro / Manual</option>
+            </select>
+          </div>
+          <div class="card-body">
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div class="dropzone-title">Clique ou arraste o arquivo aqui</div>
+              <div class="dropzone-sub">.xlsx, .xlsm, .xls, .csv</div>
+            </div>
+            <input type="file" id="file-input" accept=".xlsx,.xlsm,.xls,.csv" style="display:none" onchange="handleFileImport(event)">
+            <div id="mapper-section" style="display:none;margin-top:20px;">
+              <div class="form-section-title">Mapeamento de colunas</div>
+              <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Associe as colunas da sua planilha com os campos do sistema:</p>
+              <div id="mapper-rows"></div>
+              <div style="margin-top:8px;">
+                <div class="form-group" style="margin-bottom:12px;">
+                  <label>Loja padrão para este arquivo</label>
+                  <select id="import-store">
+                    <option value="Izu Japanese">Izu Japanese</option>
+                    <option value="Izu Poke">Izu Poke</option>
+                    <option value="Izu Doces">Izu Doces</option>
+                  </select>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="confirmarImport()">Confirmar importação</button>
+                <button class="btn btn-ghost" onclick="cancelarImport()">Cancelar</button>
+              </div>
+              <div id="import-preview" style="margin-top:16px;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Campos esperados por plataforma</span></div>
+          <div class="card-body">
+            <div class="grid3">
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">iFood</div>
+                <div style="font-size:12px;color:var(--text3);line-height:2;">Data do pedido<br>ID do pedido<br>Valor do pedido<br>Comissão iFood<br>Taxa de entrega<br>Valor a receber<br>Status</div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">99Food</div>
+                <div style="font-size:12px;color:var(--text3);line-height:2;">Data<br>Número pedido<br>Total<br>Taxa serviço<br>Entrega<br>Repasse<br>Situação</div>
+              </div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Anota Aí</div>
+                <div style="font-size:12px;color:var(--text3);line-height:2;">Criado em<br>Cód. pedido<br>Valor total<br>Taxa plataforma<br>Frete<br>Valor repasse<br>Status pedido</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════ CONFIGURAÇÕES ═══════════════════ -->
+      <div class="page" id="page-configuracoes">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Lojas</span></div>
+            <div class="card-body">
+              <div id="list-lojas"></div>
+              <div style="display:flex;gap:8px;margin-top:16px;">
+                <input type="text" id="nova-loja-input" placeholder="Nome da nova loja..." style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;">
+                <button class="btn btn-primary btn-sm" onclick="adicionarLoja()">Adicionar</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Plataformas ativas</span></div>
+            <div class="card-body" id="config-plataformas"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Preferências gerais</span></div>
+          <div class="card-body">
+            <div class="settings-section">
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label">Modo noturno</div>
+                  <div class="setting-desc">Alterna entre tema escuro e claro</div>
+                </div>
+                <div class="switch on" id="switch-dark" onclick="toggleDarkMode()"></div>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label">Exportar todos os dados</div>
+                  <div class="setting-desc">Baixa um arquivo JSON com todos os pedidos cadastrados</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="exportarDados()">Exportar</button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label">Importar backup</div>
+                  <div class="setting-desc">Restaura dados de um arquivo JSON exportado anteriormente</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('backup-input').click()">Importar</button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <div class="setting-label" style="color:var(--red);">Apagar todos os dados</div>
+                  <div class="setting-desc">Remove todos os pedidos. Irreversível.</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="apagarTudo()">Apagar tudo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ═══ MODAL NOVO PEDIDO ═══ -->
+<div class="modal-overlay" id="modal-novo-pedido">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Novo Pedido</span>
+      <button class="btn-icon" onclick="closeModal('modal-novo-pedido')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="p-data">
+        </div>
+        <div class="form-group">
+          <label>Loja</label>
+          <select id="p-loja"></select>
+        </div>
+        <div class="form-group">
+          <label>Plataforma</label>
+          <select id="p-plataforma" onchange="autoTaxa()">
+            <option>iFood</option><option>99Food</option><option>Anota Aí</option><option>Manual</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="p-status">
+            <option>Entregue</option><option>Pendente</option><option>Cancelado</option><option>Contestado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descrição (opcional)</label>
+          <input type="text" id="p-desc" placeholder="Ex: Combo salmão">
+        </div>
+        <div class="form-group">
+          <label>ID do pedido (opcional)</label>
+          <input type="text" id="p-id" placeholder="Ex: #12345">
+        </div>
+      </div>
+      <div class="form-section-title">Valores</div>
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label>Valor bruto (R$)</label>
+          <input type="number" id="p-valor" step="0.01" placeholder="0,00" oninput="calcLiquido()">
+        </div>
+        <div class="form-group">
+          <label>Taxa plataforma (%)</label>
+          <input type="number" id="p-taxa" step="0.1" placeholder="%" oninput="calcLiquido()">
+          <span class="form-hint" id="hint-taxa">Taxa padrão da plataforma</span>
+        </div>
+        <div class="form-group">
+          <label>Taxa de entrega (R$)</label>
+          <input type="number" id="p-taxa-entrega" step="0.01" placeholder="0,00" oninput="calcLiquido()">
+          <span class="form-hint">Valor cobrado pela plataforma</span>
+        </div>
+      </div>
+      <div style="background:var(--green-bg);border:1px solid rgba(122,196,158,0.2);border-radius:var(--radius-sm);padding:12px 16px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--text2);">Valor líquido estimado:</span>
+        <span style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--green);" id="p-liquido-display">R$ 0,00</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-novo-pedido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPedido()">Salvar pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL CANCELAMENTO ═══ -->
+<div class="modal-overlay" id="modal-cancel">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Cancelamento</span>
+      <button class="btn-icon" onclick="closeModal('modal-cancel')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="c-data">
+        </div>
+        <div class="form-group">
+          <label>Loja</label>
+          <select id="c-loja"></select>
+        </div>
+        <div class="form-group">
+          <label>Plataforma</label>
+          <select id="c-plataforma"><option>iFood</option><option>99Food</option><option>Anota Aí</option><option>Manual</option></select>
+        </div>
+        <div class="form-group">
+          <label>Motivo</label>
+          <select id="c-motivo">
+            <option>Cliente desistiu</option>
+            <option>Erro no pedido</option>
+            <option>Problema na entrega</option>
+            <option>Produto indisponível</option>
+            <option>Cancelamento plataforma</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor do pedido (R$)</label>
+          <input type="number" id="c-valor" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Valor recuperado (R$)</label>
+          <input type="number" id="c-recuperado" step="0.01" placeholder="0,00">
+          <span class="form-hint">Em contestação aprovada, quanto a plataforma pagou</span>
+        </div>
+        <div class="form-group">
+          <label>Contestação</label>
+          <select id="c-contestacao">
+            <option value="Não">Não contestado</option>
+            <option value="Aprovada">Contestação aprovada</option>
+            <option value="Negada">Contestação negada</option>
+            <option value="Em andamento">Em andamento</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <input type="text" id="c-obs" placeholder="Detalhes adicionais...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-cancel')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCancelamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+<input type="file" id="backup-input" accept=".json" style="display:none" onchange="importarBackup(event)">
+
+<script>
+// ═══════════════ STATE ═══════════════
+let APP = {
+  pedidos: [],
+  cancelamentos: [],
+  lojas: ['Izu Japanese', 'Izu Poke', 'Izu Doces'],
+  plataformas: ['iFood', '99Food', 'Anota Aí', 'Manual'],
+  taxas: { iFood: 12, '99Food': 15, 'Anota Aí': 10, Manual: 0 },
+  faixasEntrega: [
+    { label: 'Até 3km', valor: 5 },
+    { label: '3 a 6km', valor: 8 },
+    { label: 'Acima de 6km', valor: 12 }
+  ],
+  darkMode: true
+};
+
+let importData = { rows: [], headers: [], platform: '' };
+let charts = {};
+let chartView = 'revenue';
+
+// ═══════════════ PERSIST ═══════════════
+function save() { localStorage.setItem('izu-app', JSON.stringify(APP)); }
+function load() {
+  const s = localStorage.getItem('izu-app');
+  if (s) { try { APP = JSON.parse(s); } catch(e){} }
+  if (!APP.pedidos) APP.pedidos = [];
+  if (!APP.cancelamentos) APP.cancelamentos = [];
+  if (!APP.lojas) APP.lojas = ['Izu Japanese', 'Izu Poke', 'Izu Doces'];
+  if (!APP.plataformas) APP.plataformas = ['iFood', '99Food', 'Anota Aí', 'Manual'];
+  if (!APP.taxas) APP.taxas = { iFood: 12, '99Food': 15, 'Anota Aí': 10, Manual: 0 };
+  if (!APP.faixasEntrega) APP.faixasEntrega = [];
+  if (APP.darkMode === undefined) APP.darkMode = true;
+}
+
+// ═══════════════ THEME ═══════════════
+function applyTheme() {
+  document.body.classList.toggle('light', !APP.darkMode);
+  const sw = document.getElementById('switch-dark');
+  if (sw) sw.classList.toggle('on', APP.darkMode);
+  const lbl = document.getElementById('theme-label');
+  if (lbl) lbl.textContent = APP.darkMode ? 'Modo claro' : 'Modo escuro';
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.innerHTML = APP.darkMode
+    ? '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>'
+    : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  rebuildCharts();
+}
+function toggleDarkMode() {
+  APP.darkMode = !APP.darkMode;
+  save(); applyTheme();
+}
+
+// ═══════════════ NAVIGATION ═══════════════
+const pageTitles = { dashboard:'Dashboard', pedidos:'Pedidos', cancelamentos:'Cancelamentos', taxas:'Taxas e Custos', relatorio:'Relatórios', importar:'Importar Planilha', configuracoes:'Configurações' };
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id] || id;
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'pedidos') renderPedidos();
+  if (id === 'cancelamentos') renderCancelamentos();
+  if (id === 'taxas') renderTaxas();
+  if (id === 'relatorio') renderRelatorio();
+  if (id === 'configuracoes') renderConfiguracoes();
+}
+
+// ═══════════════ FILTERS ═══════════════
+function getFilteredPedidos() {
+  const store = document.getElementById('global-store').value;
+  const period = document.getElementById('global-period').value;
+  const cutoff = period === 'all' ? null : new Date(Date.now() - parseInt(period)*86400000);
+  return APP.pedidos.filter(p => {
+    if (store !== 'todas' && p.loja !== store) return false;
+    if (cutoff && new Date(p.data) < cutoff) return false;
+    return true;
+  });
+}
+
+// ═══════════════ HELPERS ═══════════════
+function fmtR(v) { return 'R$\u00a0' + (v||0).toFixed(2).replace('.',','); }
+function liquido(p) { return (p.valor||0) - (p.valor||0)*(p.taxa||0)/100 - (p.taxaEntrega||0); }
+function platformBadge(p) {
+  const cls = {'iFood':'badge-ifood','99Food':'badge-99food','Anota Aí':'badge-anotaai','Manual':'badge-manual'};
+  return `<span class="badge ${cls[p]||'badge-manual'}">${p}</span>`;
+}
+function statusBadge(s) {
+  const cls = {'Entregue':'badge-entregue','Cancelado':'badge-cancelado','Contestado':'badge-contestado','Pendente':'badge-pendente'};
+  return `<span class="badge ${cls[s]||'badge-pendente'}">${s}</span>`;
+}
+function storeBadge(s) {
+  const cls = {'Izu Japanese':'badge-izu-japanese','Izu Poke':'badge-izu-poke','Izu Doces':'badge-izu-doces'};
+  return `<span class="badge ${cls[s]||'tag tag-store'}">${s}</span>`;
+}
+function refreshAll() { const cur = document.querySelector('.nav-item.active'); if(cur) cur.click(); }
+
+// ═══════════════ DASHBOARD ═══════════════
+function renderDashboard() {
+  const data = getFilteredPedidos().filter(p => p.status !== 'Cancelado');
+  const bruta = data.reduce((s,p)=>s+(p.valor||0),0);
+  const taxas = data.reduce((s,p)=>s+(p.valor||0)*(p.taxa||0)/100,0);
+  const entrega = data.reduce((s,p)=>s+(p.taxaEntrega||0),0);
+  const liq = bruta - taxas - entrega;
+  const ticket = data.length ? bruta/data.length : 0;
+  const cancel = APP.cancelamentos.length;
+  const perdas = APP.cancelamentos.reduce((s,c)=>s+(c.valor||0)-(c.recuperado||0),0);
+
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric-card gold"><div class="metric-label">Receita Bruta</div><div class="metric-value gold">${fmtR(bruta)}</div><div class="metric-sub">${data.length} pedidos</div></div>
+    <div class="metric-card red"><div class="metric-label">Taxas Plataformas</div><div class="metric-value" style="color:var(--red)">${fmtR(taxas)}</div><div class="metric-sub">${bruta>0?(taxas/bruta*100).toFixed(1):0}% da bruta</div></div>
+    <div class="metric-card blue"><div class="metric-label">Taxas Entrega</div><div class="metric-value" style="color:var(--blue)">${fmtR(entrega)}</div><div class="metric-sub">Cobradas pelas plataformas</div></div>
+    <div class="metric-card green"><div class="metric-label">Receita Líquida</div><div class="metric-value green">${fmtR(liq)}</div><div class="metric-sub">${bruta>0?(liq/bruta*100).toFixed(1):0}% de aproveitamento</div></div>
+    <div class="metric-card orange"><div class="metric-label">Ticket Médio</div><div class="metric-value" style="color:var(--orange)">${fmtR(ticket)}</div><div class="metric-sub">Por pedido (bruto)</div></div>
+    <div class="metric-card red"><div class="metric-label">Perdas Cancelam.</div><div class="metric-value" style="color:var(--red)">${fmtR(perdas)}</div><div class="metric-sub">${cancel} cancelamentos</div></div>
+  `;
+
+  // Platform chart
+  const platforms = {};
+  data.forEach(p => {
+    if (!platforms[p.plataforma]) platforms[p.plataforma] = { revenue: 0, orders: 0 };
+    platforms[p.plataforma].revenue += chartView === 'revenue' ? liquido(p) : 1;
+    platforms[p.plataforma].orders += 1;
+  });
+  const pColors = { iFood:'#e84343', '99Food':'#7aaee8', 'Anota Aí':'#b07ae8', Manual:'#7ac49e' };
+  renderChart('chart-platform', 'doughnut', Object.keys(platforms), Object.keys(platforms).map(k => chartView === 'revenue' ? platforms[k].revenue : platforms[k].orders), Object.keys(platforms).map(k => pColors[k]||'#888'));
+
+  // Store chart
+  const stores = {};
+  data.forEach(p => { stores[p.loja] = (stores[p.loja]||0) + liquido(p); });
+  const sColors = ['#e8c97a','#7ac49e','#7aaee8','#b07ae8','#e87a7a'];
+  renderChart('chart-store', 'doughnut', Object.keys(stores), Object.values(stores), sColors);
+
+  // Daily chart
+  const days = {};
+  data.forEach(p => { days[p.data] = (days[p.data]||0) + liquido(p); });
+  const sortedDays = Object.keys(days).sort();
+  renderLineChart('chart-daily', sortedDays, sortedDays.map(d => days[d]));
+
+  // Platform fees breakdown
+  const pfees = {};
+  data.forEach(p => {
+    if (!pfees[p.plataforma]) pfees[p.plataforma] = { orders:0, gross:0, fees:0 };
+    pfees[p.plataforma].orders++;
+    pfees[p.plataforma].gross += p.valor||0;
+    pfees[p.plataforma].fees += (p.valor||0)*(p.taxa||0)/100;
+  });
+  document.getElementById('dash-platform-fees').innerHTML = Object.entries(pfees).map(([pl,v]) => `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        ${platformBadge(pl)}
+        <span style="font-size:13px;font-weight:500;color:var(--red)">${fmtR(v.fees)}</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">${v.orders} pedidos · ${v.gross>0?(v.fees/v.gross*100).toFixed(1):0}% de taxa média</div>
+      <div class="profit-bar"><div class="profit-bar-fill" style="width:${v.gross>0?Math.min(100,v.fees/v.gross*100):0}%;background:var(--red)"></div></div>
+    </div>
+  `).join('') || '<p style="color:var(--text3);font-size:13px;">Sem dados</p>';
+
+  // Cancels
+  const byPlatCancel = {};
+  APP.cancelamentos.forEach(c => { byPlatCancel[c.plataforma] = (byPlatCancel[c.plataforma]||0)+1; });
+  const totalCancel = APP.cancelamentos.length;
+  const totalRecov = APP.cancelamentos.reduce((s,c)=>s+(c.recuperado||0),0);
+  const totalLoss = APP.cancelamentos.reduce((s,c)=>s+(c.valor||0)-(c.recuperado||0),0);
+  document.getElementById('dash-cancels').innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text2)">Total cancelados</span><span style="font-weight:500">${totalCancel}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text2)">Valor recuperado</span><span style="color:var(--green);font-weight:500">${fmtR(totalRecov)}</span></div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;"><span style="color:var(--text2)">Perda real</span><span style="color:var(--red);font-weight:500">${fmtR(totalLoss)}</span></div>
+  `;
+
+  // Ticket by store
+  const tktStore = {};
+  data.forEach(p => {
+    if (!tktStore[p.loja]) tktStore[p.loja] = { sum:0, n:0 };
+    tktStore[p.loja].sum += p.valor||0;
+    tktStore[p.loja].n++;
+  });
+  document.getElementById('dash-ticket').innerHTML = Object.entries(tktStore).map(([loja,v]) => `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      ${storeBadge(loja)}<span style="font-weight:500;color:var(--accent)">${fmtR(v.n?v.sum/v.n:0)}</span>
+    </div>
+  `).join('') || '<p style="color:var(--text3);font-size:13px;">Sem dados</p>';
+
+  // Recent
+  const recent = [...data].reverse().slice(0,8);
+  document.getElementById('dash-recent').innerHTML = recent.map(p => `
+    <tr>
+      <td>${p.data}</td><td>${storeBadge(p.loja)}</td><td>${platformBadge(p.plataforma)}</td>
+      <td style="color:var(--text2)">${p.desc||'—'}</td>
+      <td>${fmtR(p.valor)}</td>
+      <td style="color:var(--red)">${fmtR((p.valor||0)*(p.taxa||0)/100)} <span style="color:var(--text3)">(${p.taxa||0}%)</span></td>
+      <td style="color:var(--blue)">${fmtR(p.taxaEntrega||0)}</td>
+      <td style="color:var(--green);font-weight:500">${fmtR(liquido(p))}</td>
+      <td>${statusBadge(p.status)}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:32px">Nenhum pedido cadastrado</td></tr>';
+}
+
+// ═══════════════ CHARTS ═══════════════
+function chartColors() {
+  return APP.darkMode ? { grid:'rgba(255,255,255,0.06)', label:'#9a9590', bg:'#1f1f1f' } : { grid:'rgba(0,0,0,0.06)', label:'#6b6560', bg:'#ffffff' };
+}
+function renderChart(id, type, labels, data, colors) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  const cc = chartColors();
+  charts[id] = new Chart(ctx, {
+    type,
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: APP.darkMode?'#161616':'#ffffff', hoverOffset: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position:'bottom', labels:{ color:cc.label, boxWidth:10, padding:14, font:{family:'DM Sans',size:12} } }, tooltip: { callbacks: { label: ctx => ' ' + (typeof ctx.raw === 'number' ? fmtR(ctx.raw) : ctx.raw) } } }
+    }
+  });
+}
+function renderLineChart(id, labels, data) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  const cc = chartColors();
+  charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#e8c97a',
+        backgroundColor: 'rgba(232,201,122,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: '#e8c97a',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid:{ color:cc.grid }, ticks:{ color:cc.label, font:{family:'DM Sans',size:11} }, border:{display:false} },
+        y: { grid:{ color:cc.grid }, ticks:{ color:cc.label, font:{family:'DM Sans',size:11}, callback: v => 'R$'+v.toFixed(0) }, border:{display:false} }
+      },
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx => ' ' + fmtR(ctx.raw) } } }
+    }
+  });
+}
+function rebuildCharts() {
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+function setChartView(view, el) {
+  chartView = view;
+  document.querySelectorAll('#chart-toggle .toggle-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  renderDashboard();
+}
+
+// ═══════════════ PEDIDOS ═══════════════
+function renderPedidos() {
+  const search = (document.getElementById('search-pedidos')?.value||'').toLowerCase();
+  const platFilter = document.getElementById('filter-platform')?.value||'';
+  const statusFilter = document.getElementById('filter-status')?.value||'';
+  const store = document.getElementById('global-store').value;
+  const period = document.getElementById('global-period').value;
+  const cutoff = period === 'all' ? null : new Date(Date.now() - parseInt(period)*86400000);
+  let arr = [...APP.pedidos].reverse().filter(p => {
+    if (store !== 'todas' && p.loja !== store) return false;
+    if (cutoff && new Date(p.data) < cutoff) return false;
+    if (platFilter && p.plataforma !== platFilter) return false;
+    if (statusFilter && p.status !== statusFilter) return false;
+    if (search && !JSON.stringify(p).toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tbody = document.getElementById('tbody-pedidos');
+  tbody.innerHTML = arr.map((p,i) => `
+    <tr>
+      <td>${p.data}</td><td>${storeBadge(p.loja)}</td><td>${platformBadge(p.plataforma)}</td>
+      <td style="color:var(--text2)">${p.desc||'—'}</td>
+      <td>${fmtR(p.valor)}</td>
+      <td style="color:var(--red)">${p.taxa||0}%</td>
+      <td style="color:var(--blue)">${fmtR(p.taxaEntrega||0)}</td>
+      <td style="color:var(--green);font-weight:500">${fmtR(liquido(p))}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="excluirPedido(${APP.pedidos.length-1-i})">×</button></td>
+    </tr>
+  `).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:32px">Nenhum pedido encontrado</td></tr>';
+}
+function excluirPedido(idx) {
+  if (!confirm('Excluir este pedido?')) return;
+  APP.pedidos.splice(idx, 1); save(); renderPedidos(); notify('Pedido excluído', 'success');
+}
+
+// ═══════════════ CANCELAMENTOS ═══════════════
+function renderCancelamentos() {
+  const totalLoss = APP.cancelamentos.reduce((s,c)=>s+(c.valor||0)-(c.recuperado||0),0);
+  const totalRecov = APP.cancelamentos.reduce((s,c)=>s+(c.recuperado||0),0);
+  document.getElementById('cancel-metrics').innerHTML = `
+    <div class="metric-card red"><div class="metric-label">Total cancelamentos</div><div class="metric-value" style="color:var(--red)">${APP.cancelamentos.length}</div></div>
+    <div class="metric-card orange"><div class="metric-label">Valor total cancelado</div><div class="metric-value" style="color:var(--orange)">${fmtR(APP.cancelamentos.reduce((s,c)=>s+(c.valor||0),0))}</div></div>
+    <div class="metric-card green"><div class="metric-label">Valor recuperado</div><div class="metric-value green">${fmtR(totalRecov)}</div><div class="metric-sub">via contestação</div></div>
+    <div class="metric-card red"><div class="metric-label">Perda real</div><div class="metric-value" style="color:var(--red)">${fmtR(totalLoss)}</div></div>
+  `;
+  document.getElementById('tbody-cancelamentos').innerHTML = [...APP.cancelamentos].reverse().map(c => `
+    <tr>
+      <td>${c.data}</td><td>${storeBadge(c.loja)}</td><td>${platformBadge(c.plataforma)}</td>
+      <td style="color:var(--text2)">${c.motivo||'—'}</td>
+      <td>${fmtR(c.valor)}</td>
+      <td style="color:var(--green)">${fmtR(c.recuperado||0)}</td>
+      <td style="color:var(--red);font-weight:500">${fmtR((c.valor||0)-(c.recuperado||0))}</td>
+      <td>${c.contestacao==='Aprovada'?'<span class="badge badge-entregue">Aprovada</span>':c.contestacao==='Negada'?'<span class="badge badge-cancelado">Negada</span>':c.contestacao==='Em andamento'?'<span class="badge badge-pendente">Em andamento</span>':'<span class="badge" style="background:var(--bg4);color:var(--text3)">Não</span>'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:32px">Nenhum cancelamento registrado</td></tr>';
+}
+
+// ═══════════════ TAXAS ═══════════════
+function renderTaxas() {
+  document.getElementById('taxas-plataformas').innerHTML = APP.plataformas.map(pl => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div>${platformBadge(pl)}</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="number" class="taxa-input" data-plat="${pl}" value="${APP.taxas[pl]||0}" step="0.1" min="0" max="100" style="width:80px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text);font-family:var(--font-body);font-size:14px;text-align:right;outline:none;">
+        <span style="color:var(--text3);font-size:14px;">%</span>
+      </div>
+    </div>
+  `).join('');
+  renderFaixas();
+}
+function salvarTaxas() {
+  document.querySelectorAll('.taxa-input').forEach(inp => {
+    APP.taxas[inp.dataset.plat] = parseFloat(inp.value)||0;
+  });
+  save(); notify('Taxas salvas com sucesso!', 'success');
+}
+function renderFaixas() {
+  document.getElementById('faixas-entrega').innerHTML = APP.faixasEntrega.map((f,i) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <input type="text" value="${f.label}" style="flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;" oninput="APP.faixasEntrega[${i}].label=this.value;save()">
+      <input type="number" value="${f.valor}" style="width:80px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;color:var(--text);font-family:var(--font-body);font-size:13px;text-align:right;outline:none;" oninput="APP.faixasEntrega[${i}].valor=parseFloat(this.value)||0;save()">
+      <span style="color:var(--text3);font-size:13px;">R$</span>
+      <button class="btn btn-danger btn-sm" onclick="APP.faixasEntrega.splice(${i},1);save();renderFaixas()">×</button>
+    </div>
+  `).join('');
+}
+function addFaixaEntrega() {
+  APP.faixasEntrega.push({ label:'Nova faixa', valor:0 });
+  save(); renderFaixas();
+}
+
+// ═══════════════ RELATÓRIO ═══════════════
+function renderRelatorio() {
+  const data = getFilteredPedidos().filter(p => p.status !== 'Cancelado');
+  const bruta = data.reduce((s,p)=>s+(p.valor||0),0);
+  const taxasPlat = data.reduce((s,p)=>s+(p.valor||0)*(p.taxa||0)/100,0);
+  const taxasEntr = data.reduce((s,p)=>s+(p.taxaEntrega||0),0);
+  const liq = bruta - taxasPlat - taxasEntr;
+  const perdas = APP.cancelamentos.reduce((s,c)=>s+(c.valor||0)-(c.recuperado||0),0);
+  const resultLiq = liq - perdas;
+
+  document.getElementById('dre-body').innerHTML = `
+    <div style="font-size:13px;">
+      ${dreRow('(+) Receita Bruta Total', bruta, 'var(--text)', true)}
+      ${dreRow('(-) Taxas de plataformas', taxasPlat, 'var(--red)')}
+      ${dreRow('(-) Taxas de entrega', taxasEntr, 'var(--red)')}
+      <div style="height:1px;background:var(--border);margin:10px 0"></div>
+      ${dreRow('(=) Receita Líquida Operacional', liq, 'var(--green)', true)}
+      ${dreRow('(-) Perdas por cancelamentos', perdas, 'var(--red)')}
+      <div style="height:1px;background:var(--border2);margin:10px 0"></div>
+      ${dreRow('(=) Resultado Líquido', resultLiq, resultLiq>=0?'var(--green)':'var(--red)', true)}
+    </div>
+  `;
+
+  const byLoja = {};
+  data.forEach(p => {
+    if (!byLoja[p.loja]) byLoja[p.loja] = { orders:0, gross:0, net:0 };
+    byLoja[p.loja].orders++;
+    byLoja[p.loja].gross += p.valor||0;
+    byLoja[p.loja].net += liquido(p);
+  });
+  document.getElementById('perf-lojas').innerHTML = Object.entries(byLoja).map(([loja,v]) => `
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        ${storeBadge(loja)}
+        <span style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--green)">${fmtR(v.net)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">${v.orders} pedidos · bruto ${fmtR(v.gross)} · ticket ${fmtR(v.orders?v.gross/v.orders:0)}</div>
+      <div class="profit-bar"><div class="profit-bar-fill" style="width:${bruta>0?Math.min(100,v.net/bruta*100):0}%"></div></div>
+    </div>
+  `).join('') || '<p style="color:var(--text3);font-size:13px">Sem dados</p>';
+
+  const byPlat = {};
+  data.forEach(p => {
+    if (!byPlat[p.plataforma]) byPlat[p.plataforma] = { orders:0, gross:0, fees:0, net:0, delivery:0 };
+    byPlat[p.plataforma].orders++;
+    byPlat[p.plataforma].gross += p.valor||0;
+    byPlat[p.plataforma].fees += (p.valor||0)*(p.taxa||0)/100;
+    byPlat[p.plataforma].delivery += p.taxaEntrega||0;
+    byPlat[p.plataforma].net += liquido(p);
+  });
+  document.getElementById('comp-plataformas').innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Plataforma</th><th>Pedidos</th><th>Receita Bruta</th><th>Taxa Plat.</th><th>Taxa Entrega</th><th>Receita Líquida</th><th>Ticket Médio</th><th>% Aproveitamento</th></tr></thead>
+      <tbody>
+        ${Object.entries(byPlat).map(([pl,v])=>`
+          <tr>
+            <td>${platformBadge(pl)}</td>
+            <td>${v.orders}</td>
+            <td>${fmtR(v.gross)}</td>
+            <td style="color:var(--red)">${fmtR(v.fees)}</td>
+            <td style="color:var(--blue)">${fmtR(v.delivery)}</td>
+            <td style="color:var(--green);font-weight:500">${fmtR(v.net)}</td>
+            <td>${fmtR(v.orders?v.gross/v.orders:0)}</td>
+            <td>${v.gross>0?(v.net/v.gross*100).toFixed(1):0}%</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table></div>
+  `;
+}
+function dreRow(label, value, color, bold=false) {
+  return `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);${bold?'font-weight:600;':''}">
+    <span style="color:${bold?'var(--text)':'var(--text2)'}">${label}</span>
+    <span style="color:${color};font-family:${bold?'var(--font-display)':'inherit'}">${fmtR(value)}</span>
+  </div>`;
+}
+
+// ═══════════════ CONFIGURAÇÕES ═══════════════
+function renderConfiguracoes() {
+  document.getElementById('list-lojas').innerHTML = APP.lojas.map((l,i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      ${storeBadge(l)}
+      <button class="btn btn-danger btn-sm" onclick="removerLoja(${i})">Remover</button>
+    </div>
+  `).join('');
+
+  document.getElementById('config-plataformas').innerHTML = APP.plataformas.map((p,i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      ${platformBadge(p)}
+      <button class="btn btn-ghost btn-sm" style="color:var(--text3)">Ativa</button>
+    </div>
+  `).join('');
+
+  const sw = document.getElementById('switch-dark');
+  if (sw) sw.classList.toggle('on', APP.darkMode);
+}
+function adicionarLoja() {
+  const inp = document.getElementById('nova-loja-input');
+  const nome = inp.value.trim();
+  if (!nome) return;
+  if (APP.lojas.includes(nome)) { notify('Loja já existe', 'error'); return; }
+  APP.lojas.push(nome);
+  save();
+  inp.value = '';
+  renderConfiguracoes();
+  atualizarSelectsLojas();
+  notify('Loja adicionada!', 'success');
+  const el = document.getElementById('global-store');
+  const opt = document.createElement('option');
+  opt.value = nome; opt.textContent = nome;
+  el.appendChild(opt);
+}
+function removerLoja(i) {
+  if (!confirm('Remover esta loja? Os pedidos vinculados não serão excluídos.')) return;
+  APP.lojas.splice(i,1); save(); renderConfiguracoes();
+}
+
+// ═══════════════ NOVO PEDIDO ═══════════════
+function atualizarSelectsLojas() {
+  ['p-loja','c-loja','import-store'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = APP.lojas.map(l => `<option value="${l}">${l}</option>`).join('');
+  });
+}
+function autoTaxa() {
+  const plat = document.getElementById('p-plataforma').value;
+  const taxa = APP.taxas[plat] || 0;
+  document.getElementById('p-taxa').value = taxa;
+  document.getElementById('hint-taxa').textContent = `Taxa padrão: ${taxa}%`;
+  calcLiquido();
+}
+function calcLiquido() {
+  const val = parseFloat(document.getElementById('p-valor').value)||0;
+  const taxa = parseFloat(document.getElementById('p-taxa').value)||0;
+  const entrega = parseFloat(document.getElementById('p-taxa-entrega').value)||0;
+  const liq = val - val*taxa/100 - entrega;
+  document.getElementById('p-liquido-display').textContent = fmtR(liq);
+}
+function salvarPedido() {
+  const data = document.getElementById('p-data').value;
+  const loja = document.getElementById('p-loja').value;
+  const plataforma = document.getElementById('p-plataforma').value;
+  const valor = parseFloat(document.getElementById('p-valor').value)||0;
+  if (!data || !loja || valor <= 0) { notify('Preencha data, loja e valor', 'error'); return; }
+  APP.pedidos.push({
+    data, loja, plataforma,
+    status: document.getElementById('p-status').value,
+    desc: document.getElementById('p-desc').value,
+    id: document.getElementById('p-id').value,
+    valor,
+    taxa: parseFloat(document.getElementById('p-taxa').value)||0,
+    taxaEntrega: parseFloat(document.getElementById('p-taxa-entrega').value)||0
+  });
+  save();
+  closeModal('modal-novo-pedido');
+  notify('Pedido salvo!', 'success');
+  if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+}
+
+// ═══════════════ CANCELAMENTO ═══════════════
+function salvarCancelamento() {
+  const data = document.getElementById('c-data').value;
+  const valor = parseFloat(document.getElementById('c-valor').value)||0;
+  if (!data || valor <= 0) { notify('Preencha data e valor', 'error'); return; }
+  APP.cancelamentos.push({
+    data,
+    loja: document.getElementById('c-loja').value,
+    plataforma: document.getElementById('c-plataforma').value,
+    motivo: document.getElementById('c-motivo').value,
+    valor,
+    recuperado: parseFloat(document.getElementById('c-recuperado').value)||0,
+    contestacao: document.getElementById('c-contestacao').value,
+    obs: document.getElementById('c-obs').value
+  });
+  save();
+  closeModal('modal-cancel');
+  notify('Cancelamento registrado!', 'success');
+  renderCancelamentos();
+}
+
+// ═══════════════ IMPORT ═══════════════
+function handleFileImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(ev.target.result, { type:'binary' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1 });
+      if (!rows.length) { notify('Arquivo vazio', 'error'); return; }
+      importData.headers = rows[0].map(h => String(h||'').trim());
+      importData.rows = rows.slice(1).filter(r => r.some(c => c !== undefined && c !== ''));
+      importData.platform = document.getElementById('import-platform').value;
+      renderMapper();
+    } catch(err) { notify('Erro ao ler arquivo: '+err.message, 'error'); }
+  };
+  reader.readAsBinaryString(file);
+}
+const SYSTEM_FIELDS = [
+  { key:'data', label:'Data do pedido', required:true },
+  { key:'valor', label:'Valor bruto (R$)', required:true },
+  { key:'taxa', label:'Taxa da plataforma (%)' },
+  { key:'taxaEntrega', label:'Taxa de entrega (R$)' },
+  { key:'status', label:'Status do pedido' },
+  { key:'desc', label:'Descrição / produto' },
+  { key:'idPedido', label:'ID / número do pedido' },
+  { key:'ignore', label:'— Ignorar esta coluna —' }
+];
+function renderMapper() {
+  document.getElementById('mapper-section').style.display = 'block';
+  const plat = importData.platform;
+  // Smart guess
+  const guesses = {
+    data: ['data','date','criado','created','dt','dia'],
+    valor: ['valor','total','bruto','gross','price','vl_total','vl_pedido'],
+    taxa: ['taxa','comissão','comissao','fee','commission','taxa_plat'],
+    taxaEntrega: ['entrega','frete','delivery','shipping','taxa_entrega'],
+    status: ['status','situacao','situação','estado'],
+    desc: ['descricao','descrição','produto','item','desc'],
+    idPedido: ['id','pedido','number','numero','código','cod']
+  };
+  document.getElementById('mapper-rows').innerHTML = importData.headers.map((h,i) => {
+    const hl = h.toLowerCase().replace(/[^a-záéíóúâêîôûãõç0-9]/gi,'');
+    let guessed = 'ignore';
+    for (const [key, patterns] of Object.entries(guesses)) {
+      if (patterns.some(p => hl.includes(p.replace(/[^a-z]/g,'')))) { guessed = key; break; }
+    }
+    return `<div class="mapper-grid">
+      <div class="mapper-field">${h}</div>
+      <div class="mapper-arrow">→</div>
+      <select class="mapper-select" id="map-${i}">
+        ${SYSTEM_FIELDS.map(f => `<option value="${f.key}" ${guessed===f.key?'selected':''}>${f.label}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+  document.getElementById('import-preview').innerHTML = `<p style="font-size:12px;color:var(--text3)">${importData.rows.length} linhas encontradas · ${importData.headers.length} colunas · Plataforma: ${plat}</p>`;
+}
+function confirmarImport() {
+  const loja = document.getElementById('import-store').value;
+  const plat = document.getElementById('import-platform').value;
+  const mapping = importData.headers.map((h,i) => ({ col:i, field:document.getElementById('map-'+i).value }));
+  let count = 0, erros = 0;
+  importData.rows.forEach(row => {
+    const p = { loja, plataforma: plat };
+    mapping.forEach(m => {
+      if (m.field === 'ignore') return;
+      let val = row[m.col];
+      if (val === undefined || val === null || val === '') return;
+      if (m.field === 'data') {
+        if (typeof val === 'number') {
+          const d = new Date((val - 25569)*86400*1000);
+          p.data = d.toISOString().split('T')[0];
+        } else { p.data = String(val).split(' ')[0]; }
+      } else if (['valor','taxa','taxaEntrega'].includes(m.field)) {
+        p[m.field] = parseFloat(String(val).replace(',','.').replace(/[^0-9.]/g,''))||0;
+      } else { p[m.field] = String(val); }
+    });
+    if (!p.data || !p.valor) { erros++; return; }
+    if (!p.status) p.status = 'Entregue';
+    if (!p.taxa && APP.taxas[plat]) p.taxa = APP.taxas[plat];
+    APP.pedidos.push(p);
+    count++;
+  });
+  save();
+  document.getElementById('mapper-section').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  notify(`${count} pedidos importados! ${erros>0?erros+' linhas ignoradas':''}`, 'success');
+}
+function cancelarImport() {
+  document.getElementById('mapper-section').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+// ═══════════════ MODAL ═══════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'modal-novo-pedido') {
+    atualizarSelectsLojas();
+    document.getElementById('p-data').value = new Date().toISOString().split('T')[0];
+    autoTaxa();
+  }
+  if (id === 'modal-cancel') {
+    atualizarSelectsLojas();
+    document.getElementById('c-data').value = new Date().toISOString().split('T')[0];
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+// ═══════════════ NOTIFY ═══════════════
+function notify(msg, type='success') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = `notif notif-${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ═══════════════ BACKUP ═══════════════
+function exportarDados() {
+  const blob = new Blob([JSON.stringify(APP, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'izu-backup-'+new Date().toISOString().split('T')[0]+'.json';
+  a.click();
+}
+function importarBackup(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try { APP = JSON.parse(ev.target.result); save(); refreshAll(); notify('Backup restaurado!', 'success'); } catch { notify('Arquivo inválido', 'error'); }
+  };
+  r.readAsText(file);
+}
+function apagarTudo() {
+  if (!confirm('Apagar TODOS os dados? Esta ação é irreversível!')) return;
+  APP.pedidos = []; APP.cancelamentos = []; save(); refreshAll(); notify('Dados apagados', 'success');
+}
+
+// ═══════════════ DEMO DATA ═══════════════
+function seedDemoData() {
+  if (APP.pedidos.length > 0) return;
+  const lojas = ['Izu Japanese','Izu Poke','Izu Doces'];
+  const plats = ['iFood','99Food','Anota Aí','Manual'];
+  const taxas = { iFood:12, '99Food':15, 'Anota Aí':10, Manual:0 };
+  const items = { 'Izu Japanese':['Combo salmão','Temaki especial','Sashimi misto','Uramaki 16pc'], 'Izu Poke':['Bowl proteico','Poke atum','Bowl vegano','Poke salmão'], 'Izu Doces':['Cheesecake morango','Brownie belga','Kit festa','Torta limão'] };
+  for (let d = 29; d >= 0; d--) {
+    const qtd = Math.floor(Math.random()*4)+2;
+    for (let q = 0; q < qtd; q++) {
+      const loja = lojas[Math.floor(Math.random()*lojas.length)];
+      const plat = d < 5 ? plats[Math.floor(Math.random()*plats.length)] : plats[Math.floor(Math.random()*3)];
+      const valor = 25 + Math.random()*100;
+      const dt = new Date(Date.now() - d*86400000);
+      APP.pedidos.push({
+        data: dt.toISOString().split('T')[0],
+        loja, plataforma: plat,
+        desc: items[loja][Math.floor(Math.random()*items[loja].length)],
+        valor: Math.round(valor*100)/100,
+        taxa: taxas[plat]||0,
+        taxaEntrega: plat !== 'Manual' ? (Math.random()<0.5 ? 5 : 8) : 0,
+        status: Math.random()<0.92 ? 'Entregue' : (Math.random()<0.5 ? 'Pendente' : 'Cancelado')
+      });
+    }
+  }
+  APP.cancelamentos = [
+    { data: new Date(Date.now()-5*86400000).toISOString().split('T')[0], loja:'Izu Japanese', plataforma:'iFood', motivo:'Cliente desistiu', valor:52.90, recuperado:0, contestacao:'Não', obs:'' },
+    { data: new Date(Date.now()-10*86400000).toISOString().split('T')[0], loja:'Izu Poke', plataforma:'99Food', motivo:'Produto indisponível', valor:38.00, recuperado:38.00, contestacao:'Aprovada', obs:'Contestação aprovada após 3 dias' },
+    { data: new Date(Date.now()-15*86400000).toISOString().split('T')[0], loja:'Izu Doces', plataforma:'Anota Aí', motivo:'Problema na entrega', valor:65.00, recuperado:32.50, contestacao:'Aprovada', obs:'50% aprovado' },
+  ];
+  save();
+}
+
+// ═══════════════ INIT ═══════════════
+load();
+applyTheme();
+seedDemoData();
+atualizarSelectsLojas();
+renderDashboard();
+</script>
+</body>
+</html>
