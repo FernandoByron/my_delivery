@@ -651,7 +651,7 @@ function renderDash(){
   // charts
   const plc={};d.forEach(p=>{if(!plc[p.plataforma])plc[p.plataforma]={r:0,o:0};plc[p.plataforma].r+=liq(p);plc[p.plataforma].o++;});
   const pClr={iFood:'#e84343','99Food':'#7aaee8','Anota Aí':'#b07ae8',Manual:'#7ac49e'};
-  mkDough('ch-plat',Object.keys(plc),Object.keys(plc).map(k=>cview==='rev'?plc[k].r:plc[k].o),Object.keys(plc).map(k=>pClr[k]||'#888'));
+  mkDough('ch-plat',Object.keys(plc),Object.keys(plc).map(k=>cview==='rev'?plc[k].r:plc[k].o),Object.keys(plc).map(k=>pClr[k]||'#888'),cview==='rev');
   const stc={};d.forEach(p=>{stc[p.loja]=(stc[p.loja]||0)+liq(p);});
   mkDough('ch-store',Object.keys(stc),Object.values(stc),['#e8c97a','#7ac49e','#7aaee8','#b07ae8','#e87a7a']);
   const dc={};d.forEach(p=>{dc[p.data]=(dc[p.data]||0)+liq(p);});
@@ -671,11 +671,11 @@ function renderDash(){
 
 // CHARTS
 function cc(){return APP.dark?{g:'rgba(255,255,255,0.06)',l:'#9a9590'}:{g:'rgba(0,0,0,0.06)',l:'#6b6560'};}
-function mkDough(id,labels,data,colors){
+function mkDough(id,labels,data,colors,isCur=true){
   const ctx=document.getElementById(id);if(!ctx)return;
   if(charts[id])charts[id].destroy();
   const c=cc();
-  charts[id]=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:APP.dark?'#161616':'#fff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:c.l,boxWidth:8,padding:11,font:{family:'DM Sans',size:11}}},tooltip:{callbacks:{label:ctx=>' '+fmtR(ctx.raw)}}}}});
+  charts[id]=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:APP.dark?'#161616':'#fff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:c.l,boxWidth:8,padding:11,font:{family:'DM Sans',size:11}}},tooltip:{callbacks:{label:ctx=>isCur?' '+fmtR(ctx.raw):' '+ctx.raw+' pedido'+(ctx.raw===1?'':'s')}}}}});
 }
 function mkLine(id,labels,data){
   const ctx=document.getElementById(id);if(!ctx)return;
