@@ -645,9 +645,45 @@ tr:hover td{background:var(--bg3);}
       </div>
 
       <!-- DATA (só aparece quando desbloqueado) -->
-      <div class="fg" id="q-data-wrap" style="display:none;">
-        <label>Data do pedido <span style="color:var(--accent);font-size:10px;">🔓 desbloqueado</span></label>
-        <input type="date" id="q-data-custom">
+      <!-- SEÇÃO GESTOR: aparece após desbloqueio -->
+      <div id="q-data-wrap" style="display:none;background:var(--accent-bg);border:1px solid rgba(224,48,48,0.25);border-radius:var(--radius-sm);padding:12px 14px;">
+        <div style="font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">🔓 Modo gestor</div>
+
+        <!-- Data -->
+        <div class="fg" style="margin-bottom:10px;">
+          <label>Data do pedido</label>
+          <input type="date" id="q-data-custom" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;width:100%;">
+        </div>
+
+        <!-- Modo lote -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div>
+            <div style="font-size:13px;">Lançamento em lote</div>
+            <div style="font-size:11px;color:var(--text3);">Registrar vários pedidos de uma vez</div>
+          </div>
+          <div class="sw" id="sw-lote" onclick="toggleLote()"></div>
+        </div>
+
+        <!-- Campos do lote (ocultos por padrão) -->
+        <div id="lote-fields" style="display:none;margin-top:8px;padding-top:10px;border-top:1px solid var(--border);">
+          <div class="fgrid" style="gap:10px;">
+            <div class="fg">
+              <label>Quantidade de pedidos</label>
+              <input type="number" inputmode="numeric" id="lote-qtd" placeholder="Ex: 45" min="1" max="9999"
+                style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;width:100%;">
+            </div>
+            <div class="fg">
+              <label>Valor total do período (R$)</label>
+              <div class="cwrap"><span class="cpfx">R$</span>
+                <input type="tel" inputmode="numeric" id="lote-total-d" placeholder="0,00" oninput="parseCur(this,'lote-total-r');calcTicketLote()">
+                <input type="hidden" id="lote-total-r">
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:9px 12px;margin-top:8px;font-size:12px;color:var(--text2);" id="lote-preview">
+            Preencha quantidade e valor total para ver o ticket médio
+          </div>
+        </div>
       </div>
 
       <!-- ID -->
@@ -936,14 +972,16 @@ function salvarPin(){
   if(!pin||pin.length<4){notify('PIN deve ter 4 dígitos','e');return;}
   APP.pin=pin;save();notify('PIN salvo!');
 }
-let _desbloqueado=false; // sessão atual
+let _desbloqueado=false,_modoLote=false;
 function solicitarDesbloqueio(){
   if(_desbloqueado){
-    // Bloquear novamente
-    _desbloqueado=false;
+    _desbloqueado=false;_modoLote=false;
     document.getElementById('q-data-wrap').style.display='none';
     const btn=document.getElementById('btn-unlock');
     if(btn){btn.textContent='🔒 Data livre';btn.style.color='';}
+    // reset lote
+    const sl=document.getElementById('sw-lote');if(sl)sl.classList.remove('on');
+    const lf=document.getElementById('lote-fields');if(lf)lf.style.display='none';
     return;
   }
   const pin=prompt('PIN do gestor:');
@@ -952,8 +990,32 @@ function solicitarDesbloqueio(){
   const wrap=document.getElementById('q-data-wrap');
   if(wrap){wrap.style.display='block';document.getElementById('q-data-custom').value=today();}
   const btn=document.getElementById('btn-unlock');
-  if(btn){btn.textContent='🔓 Bloqueado';btn.style.color='var(--green)';}
-  notify('Data desbloqueada para este lançamento');
+  if(btn){btn.textContent='🔓 Fechar modo gestor';btn.style.color='var(--green)';}
+  notify('Modo gestor ativado');
+}
+function toggleLote(){
+  _modoLote=!_modoLote;
+  const sl=document.getElementById('sw-lote');if(sl)sl.classList.toggle('on',_modoLote);
+  const lf=document.getElementById('lote-fields');if(lf)lf.style.display=_modoLote?'block':'none';
+  if(_modoLote){
+    // Em lote, o campo de valor principal some (usamos o total do lote)
+    const vw=document.querySelector('.fg:has(#q-val-d)');
+    const tb=document.getElementById('q-turnos')?.closest('div');
+    // Just show preview
+    calcTicketLote();
+  }
+}
+function calcTicketLote(){
+  const qtd=parseInt(document.getElementById('lote-qtd')?.value||'0');
+  const total=(parseInt(document.getElementById('lote-total-r')?.value||'0'))/100;
+  const prev=document.getElementById('lote-preview');
+  if(!prev)return;
+  if(qtd>0&&total>0){
+    const ticket=total/qtd;
+    prev.innerHTML=`<span style="color:var(--text)">${qtd} pedidos</span> · Total <span style="color:var(--accent);font-weight:600">${fmtR(total)}</span> · Ticket médio <span style="color:var(--green);font-weight:600">${fmtR(ticket)}</span>`;
+  } else {
+    prev.textContent='Preencha quantidade e valor total para ver o ticket médio';
+  }
 }
 
 // DATE
@@ -1274,11 +1336,7 @@ function salvarPed(status){
     if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
     if(document.getElementById('page-pedidos').classList.contains('active'))renderPeds();
   }
-  // Reset unlock after save
-  _desbloqueado=false;
-  const dw=document.getElementById('q-data-wrap');if(dw)dw.style.display='none';
-  const bu=document.getElementById('btn-unlock');if(bu){bu.textContent='🔒 Data livre';bu.style.color='';}
-  closeM('m-pedido');
+  resetModoGestor();closeM('m-pedido');
 }
 function salvarCancelado(){
   if(!qLoja){notify('Selecione a loja','e');return;}
@@ -1542,9 +1600,9 @@ function openM(id){
     initTurnos();
     // Trava de data
     _desbloqueado=false;
-    const dw=document.getElementById('q-data-wrap');if(dw)dw.style.display='none';
+    resetModoGestor();
     const bu=document.getElementById('btn-unlock');
-    if(bu){bu.style.display=APP.trava?'inline-flex':'none';bu.textContent='🔒 Data livre';bu.style.color='';}
+    if(bu){bu.style.display=APP.trava?'inline-flex':'none';}
     // focus value field
     setTimeout(()=>{if(vd)vd.focus();},100);
   }
