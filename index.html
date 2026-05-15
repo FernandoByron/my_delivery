@@ -1347,7 +1347,10 @@ function salvarPed(status){
     if(_modoLote){qTurno=turnoAtual();}
     else{notify('Selecione o turno','e');return;}
   }
-  const dataFinal=_desbloqueado&&document.getElementById('q-data-custom')?.value?document.getElementById('q-data-custom').value:turnoDate();
+  // Usa data customizada se o campo estiver visível e preenchido
+  const _customDate=document.getElementById('q-data-custom')?.value;
+  const _gestorVisible=document.getElementById('q-data-wrap')?.style.display!=='none';
+  const dataFinal=(_gestorVisible&&_customDate)?_customDate:turnoDate();
 
   // ── MODO LOTE ──
   if(_modoLote){
