@@ -609,7 +609,7 @@ tr:hover td{background:var(--bg3);}
         <div class="cwrap">
           <span class="cpfx">R$</span>
           <input type="tel" inputmode="numeric" id="q-val-d" placeholder="0,00"
-            oninput="parseCur(this,'q-val-r')"
+            oninput="parseCur(this,'q-val-r');if(_modoLote)calcTicketLote()"
             style="font-size:22px;font-family:var(--font-display);font-weight:700;padding-left:38px;padding-top:10px;padding-bottom:10px;color:var(--text);"
             autocomplete="off">
         </div>
@@ -644,8 +644,7 @@ tr:hover td{background:var(--bg3);}
         </div>
       </div>
 
-      <!-- DATA (só aparece quando desbloqueado) -->
-      <!-- SEÇÃO GESTOR: aparece após desbloqueio -->
+      <!-- SEÇÃO GESTOR -->
       <div id="q-data-wrap" style="display:none;background:var(--accent-bg);border:1px solid rgba(224,48,48,0.25);border-radius:var(--radius-sm);padding:12px 14px;">
         <div style="font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">🔓 Modo gestor</div>
 
@@ -655,34 +654,25 @@ tr:hover td{background:var(--bg3);}
           <input type="date" id="q-data-custom" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 11px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;width:100%;">
         </div>
 
-        <!-- Modo lote -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <!-- Toggle lote -->
+        <div style="display:flex;align-items:center;justify-content:space-between;">
           <div>
             <div style="font-size:13px;">Lançamento em lote</div>
-            <div style="font-size:11px;color:var(--text3);">Registrar vários pedidos de uma vez</div>
+            <div style="font-size:11px;color:var(--text3);">O valor acima será dividido pela quantidade</div>
           </div>
           <div class="sw" id="sw-lote" onclick="toggleLote()"></div>
         </div>
 
-        <!-- Campos do lote (ocultos por padrão) -->
-        <div id="lote-fields" style="display:none;margin-top:8px;padding-top:10px;border-top:1px solid var(--border);">
-          <div class="fgrid" style="gap:10px;">
-            <div class="fg">
-              <label>Quantidade de pedidos</label>
-              <input type="tel" inputmode="numeric" id="lote-qtd" placeholder="Ex: 450"
-                oninput="this.value=this.value.replace(/[^0-9]/g,'');calcTicketLote()"
-                style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;width:100%;">
-            </div>
-            <div class="fg">
-              <label>Valor total do período (R$)</label>
-              <div class="cwrap"><span class="cpfx">R$</span>
-                <input type="tel" inputmode="numeric" id="lote-total-d" placeholder="0,00" oninput="parseCur(this,'lote-total-r');calcTicketLote()">
-                <input type="hidden" id="lote-total-r">
-              </div>
-            </div>
+        <!-- Quantidade (aparece ao ativar lote) -->
+        <div id="lote-fields" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <div class="fg">
+            <label>Quantidade de pedidos</label>
+            <input type="tel" inputmode="numeric" id="lote-qtd" placeholder="Ex: 450"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'');calcTicketLote()"
+              style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;width:100%;">
           </div>
-          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:9px 12px;margin-top:8px;font-size:12px;color:var(--text2);" id="lote-preview">
-            Preencha quantidade e valor total para ver o ticket médio
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:9px 12px;margin-top:8px;font-size:12px;" id="lote-preview">
+            <span style="color:var(--text3)">Preencha o valor acima e a quantidade</span>
           </div>
         </div>
       </div>
@@ -1002,9 +992,6 @@ function toggleLote(){
   _modoLote=!_modoLote;
   const sl=document.getElementById('sw-lote');if(sl)sl.classList.toggle('on',_modoLote);
   const lf=document.getElementById('lote-fields');if(lf)lf.style.display=_modoLote?'block':'none';
-  // Esconde/mostra campo de valor individual
-  const vw=document.getElementById('q-val-wrap');
-  if(vw)vw.style.display=_modoLote?'none':'flex';
   if(_modoLote)calcTicketLote();
 }
 function calcTicketLote(){
@@ -1327,10 +1314,9 @@ function salvarPed(status){
   // ── MODO LOTE ──
   if(_modoLote){
     const qtd=parseInt((document.getElementById('lote-qtd')?.value||'0').replace(/[^0-9]/g,''))||0;
-    const totalCents=parseInt(document.getElementById('lote-total-r')?.value||'0')||0;
-    const total=totalCents/100;
+    const total=getValFromHidden('q-val-r')||getValFromDisp('q-val-d');
     if(qtd<=0){notify('Digite a quantidade de pedidos','e');return;}
-    if(total<=0){notify('Digite o valor total do período','e');return;}
+    if(total<=0){notify('Digite o valor no campo acima','e');return;}
     const ticket=Math.round(total/qtd*100)/100;
     for(let i=0;i<qtd;i++){
       const id=gerarId()+'l'+i;
