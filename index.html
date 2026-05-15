@@ -813,6 +813,29 @@ async function savePedidoFB(pedido, id){
   }catch(e){console.error('savePedidoFB:',e);}
 }
 
+async function salvarLoteFirebase(lote, total){
+  try{
+    const {doc,writeBatch,getFirestore}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const BATCH_SIZE=400;
+    let salvos=0;
+    for(let i=0;i<lote.length;i+=BATCH_SIZE){
+      const chunk=lote.slice(i,i+BATCH_SIZE);
+      const batch=writeBatch(_db);
+      chunk.forEach(ped=>{
+        const ref=doc(_db,'pedidos',ped._fid);
+        batch.set(ref,ped);
+      });
+      await batch.commit();
+      salvos+=chunk.length;
+      showSyncDot('online');
+    }
+    notify(lote.length+' pedidos lançados! Total '+fmtR(total));
+  }catch(e){
+    console.error('Erro batch lote:',e);
+    notify('Erro ao salvar lote: '+e.message,'e');
+  }
+}
+
 async function deletePedidoFB(id){
   if(!_db)return;
   try{
@@ -1318,16 +1341,28 @@ function salvarPed(status){
     if(qtd<=0){notify('Digite a quantidade de pedidos','e');return;}
     if(total<=0){notify('Digite o valor no campo acima','e');return;}
     const ticket=Math.round(total/qtd*100)/100;
+
+    // Monta array de pedidos
+    const lote=[];
     for(let i=0;i<qtd;i++){
       const id=gerarId()+'l'+i;
-      const ped={_fid:id,data:dataFinal,turno:qTurno,loja:qLoja,plataforma:qPlat,
-        idPedido:'',desc:'Lançamento em lote',valor:ticket,taxa:0,taxaEntrega:0,status:'Entregue'};
-      if(_syncReady){savePedidoFB(ped,id);}
-      else APP.pedidos.push(ped);
+      lote.push({_fid:id,data:dataFinal,turno:qTurno,loja:qLoja,plataforma:qPlat,
+        idPedido:'',desc:'Lançamento em lote',valor:ticket,taxa:0,taxaEntrega:0,status:'Entregue'});
     }
-    if(!_syncReady){saveLocal();if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();}
-    notify(qtd+' pedidos lançados! Total '+fmtR(total));
-    resetModoGestor();closeM('m-pedido');return;
+
+    resetModoGestor();closeM('m-pedido');
+    notify('Salvando '+qtd+' pedidos...');
+
+    if(_syncReady){
+      // Firebase: envia em batches de 400 (limite 500, margem de segurança)
+      salvarLoteFirebase(lote,total);
+    } else {
+      APP.pedidos.push(...lote);
+      saveLocal();
+      if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
+      notify(qtd+' pedidos lançados! Total '+fmtR(total));
+    }
+    return;
   }
 
   // ── MODO NORMAL ──
