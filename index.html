@@ -604,7 +604,7 @@ tr:hover td{background:var(--bg3);}
     <div class="mbody" style="display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:calc(90vh - 130px);">
 
       <!-- VALOR -->
-      <div class="fg">
+      <div class="fg" id="q-val-wrap">
         <label>Valor do pedido (R$)</label>
         <div class="cwrap">
           <span class="cpfx">R$</span>
@@ -998,13 +998,10 @@ function toggleLote(){
   _modoLote=!_modoLote;
   const sl=document.getElementById('sw-lote');if(sl)sl.classList.toggle('on',_modoLote);
   const lf=document.getElementById('lote-fields');if(lf)lf.style.display=_modoLote?'block':'none';
-  if(_modoLote){
-    // Em lote, o campo de valor principal some (usamos o total do lote)
-    const vw=document.querySelector('.fg:has(#q-val-d)');
-    const tb=document.getElementById('q-turnos')?.closest('div');
-    // Just show preview
-    calcTicketLote();
-  }
+  // Esconde/mostra campo de valor individual
+  const vw=document.getElementById('q-val-wrap');
+  if(vw)vw.style.display=_modoLote?'none':'flex';
+  if(_modoLote)calcTicketLote();
 }
 function calcTicketLote(){
   const qtd=parseInt((document.getElementById('lote-qtd')?.value||'0').replace(/\D/g,''))||0;
