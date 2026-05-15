@@ -669,7 +669,8 @@ tr:hover td{background:var(--bg3);}
           <div class="fgrid" style="gap:10px;">
             <div class="fg">
               <label>Quantidade de pedidos</label>
-              <input type="number" inputmode="numeric" id="lote-qtd" placeholder="Ex: 45" min="1" max="9999"
+              <input type="tel" inputmode="numeric" id="lote-qtd" placeholder="Ex: 450"
+                oninput="this.value=this.value.replace(/[^0-9]/g,'');calcTicketLote()"
                 style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:16px;outline:none;width:100%;">
             </div>
             <div class="fg">
@@ -1006,15 +1007,16 @@ function toggleLote(){
   }
 }
 function calcTicketLote(){
-  const qtd=parseInt(document.getElementById('lote-qtd')?.value||'0');
-  const total=(parseInt(document.getElementById('lote-total-r')?.value||'0'))/100;
+  const qtd=parseInt((document.getElementById('lote-qtd')?.value||'0').replace(/\D/g,''))||0;
+  const totalCents=parseInt(document.getElementById('lote-total-r')?.value||'0')||0;
+  const total=totalCents/100;
   const prev=document.getElementById('lote-preview');
   if(!prev)return;
   if(qtd>0&&total>0){
     const ticket=total/qtd;
-    prev.innerHTML=`<span style="color:var(--text)">${qtd} pedidos</span> · Total <span style="color:var(--accent);font-weight:600">${fmtR(total)}</span> · Ticket médio <span style="color:var(--green);font-weight:600">${fmtR(ticket)}</span>`;
+    prev.innerHTML=`<span style="color:var(--text);font-weight:600">${qtd} pedidos</span> · Total <span style="color:var(--accent);font-weight:600">${fmtR(total)}</span> · Ticket médio <span style="color:var(--green);font-weight:600">${fmtR(ticket)}</span>`;
   } else {
-    prev.textContent='Preencha quantidade e valor total para ver o ticket médio';
+    prev.innerHTML='<span style="color:var(--text3)">Preencha quantidade e valor total para ver o ticket médio</span>';
   }
 }
 
