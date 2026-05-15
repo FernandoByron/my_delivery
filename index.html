@@ -50,7 +50,7 @@ window.FIREBASE_CONFIG = {
   --shadow:0 4px 24px rgba(0,0,0,0.1);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;font-size:14px;line-height:1.6;-webkit-text-size-adjust:100%;overscroll-behavior:none;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;font-size:14px;line-height:1.6;-webkit-text-size-adjust:100%;}
 .layout{display:flex;min-height:100vh;overflow-x:hidden;}
 .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
 .main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-width:0;}
@@ -68,7 +68,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .topbar-title{font-family:var(--font-display);font-weight:600;font-size:15px;}
 .topbar-right{display:flex;align-items:center;gap:8px;}
 /* DATE BAR */
-.datebar{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.datebar{background:var(--bg2);border-bottom:1px solid var(--border);padding:9px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;position:sticky;top:54px;z-index:89;}
 .chip{padding:5px 12px;border-radius:100px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);transition:all .15s;font-family:var(--font-body);white-space:nowrap;}
 .chip:hover{background:var(--bg3);color:var(--text);}
 .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -90,7 +90,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-hei
 .mc-orange::before{background:var(--orange);}
 .mc-purple::before{background:var(--purple);}
 .mc-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
-.mc-val{font-family:var(--font-display);font-size:21px;font-weight:700;}
+.mc-val{font-family:var(--font-display);font-size:clamp(14px,2.5vw,21px);font-weight:700;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .mc-sub{font-size:11px;color:var(--text3);margin-top:3px;}
 /* CARDS */
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:15px;}
@@ -219,7 +219,6 @@ tr:hover td{background:var(--bg3);}
   .sidebar{display:none !important;}
   .main{margin-left:0 !important;width:100% !important;}
   /* Scroll wrapper: offset below topbar(48) + tabbar(50) */
-  #scroll-wrap{margin-top:50px;height:calc(100vh - 98px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 
   /* Topbar */
   .topbar{padding:0 12px;height:48px;}
@@ -289,13 +288,13 @@ tr:hover td{background:var(--bg3);}
 /* ── TAB BAR (mobile nav, hidden on desktop) ── */
 .tab-bar{
   display:none;
-  position:fixed;
-  top:48px; /* right below topbar */
+  position:sticky;
+  top:48px;
   left:0;right:0;
   height:50px;
   background:var(--bg2);
   border-bottom:2px solid var(--border);
-  z-index:500;
+  z-index:400;
   flex-direction:row;
   box-shadow:0 2px 10px rgba(0,0,0,0.25);
 }
@@ -374,8 +373,6 @@ tr:hover td{background:var(--bg3);}
     </div>
   </div>
 
-  <!-- MOBILE SCROLL WRAPPER: pushes content below topbar+tabbar on mobile -->
-  <div id="scroll-wrap" style="flex:1;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <!-- DATE BAR -->
   <div class="datebar">
     <button class="chip" onclick="setChip('hoje',this)">Hoje</button>
@@ -570,7 +567,6 @@ tr:hover td{background:var(--bg3);}
   </div>
 
   </div><!-- /content -->
-  </div><!-- /scroll-wrap -->
 </div><!-- /main -->
 </div><!-- /layout -->
 
@@ -1013,13 +1009,20 @@ function renderDash(){
   const liqT=bruta-fP-fE;
   const tkt=d.length?bruta/d.length:0;
   const perdas=APP.cancelamentos.reduce((s,c)=>s+(c.valor||0)-(c.recuperado||0),0);
+  // Meta do mês para exibir progresso no dashboard
+  const hoje=new Date();
+  const mesAtual=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0');
+  const metaAtual=(APP.metas&&APP.metas[mesAtual])||0;
+  const metaPct=metaAtual>0?Math.min(100,bruta/metaAtual*100):0;
+  const metaCor=metaPct>=100?'var(--green)':metaPct>=75?'var(--accent)':'var(--red)';
+  const metaCard=metaAtual>0
+    ?`<div class="mc mc-green"><div class="mc-lbl">Meta do mês</div><div class="mc-val" style="color:${metaCor}">${metaPct.toFixed(1)}%</div><div class="mc-sub">${fmtR(bruta)} de ${fmtR(metaAtual)}</div></div>`
+    :`<div class="mc mc-green"><div class="mc-lbl">Meta do mês</div><div class="mc-val" style="color:var(--text3)">—</div><div class="mc-sub" style="cursor:pointer;color:var(--accent);" onclick="goPageMobile('metas',document.getElementById('tab-metas'))">Definir meta</div></div>`;
   document.getElementById('d-metrics').innerHTML=`
     <div class="mc mc-accent"><div class="mc-lbl">Receita Bruta</div><div class="mc-val" style="color:var(--accent)">${fmtR(bruta)}</div><div class="mc-sub">${d.length} pedidos</div></div>
-    <div class="mc mc-red"><div class="mc-lbl">Taxas Plataformas</div><div class="mc-val" style="color:var(--red)">${fmtR(fP)}</div><div class="mc-sub">${bruta>0?(fP/bruta*100).toFixed(1):0}% da bruta</div></div>
-    <div class="mc mc-blue"><div class="mc-lbl">Taxas Entrega</div><div class="mc-val" style="color:var(--blue)">${fmtR(fE)}</div><div class="mc-sub">Da planilha da plataforma</div></div>
-    <div class="mc mc-green"><div class="mc-lbl">Receita Líquida</div><div class="mc-val" style="color:var(--green)">${fmtR(liqT)}</div><div class="mc-sub">${bruta>0?(liqT/bruta*100).toFixed(1):0}% de aproveitamento</div></div>
-    <div class="mc mc-orange"><div class="mc-lbl">Ticket Médio</div><div class="mc-val" style="color:var(--orange)">${fmtR(tkt)}</div></div>
-    <div class="mc mc-red"><div class="mc-lbl">Perdas Cancelam.</div><div class="mc-val" style="color:var(--red)">${fmtR(perdas)}</div><div class="mc-sub">${APP.cancelamentos.length} cancelamentos</div></div>`;
+    <div class="mc mc-orange"><div class="mc-lbl">Ticket Médio</div><div class="mc-val" style="color:var(--orange)">${fmtR(tkt)}</div><div class="mc-sub">por pedido</div></div>
+    <div class="mc mc-red"><div class="mc-lbl">Cancelamentos</div><div class="mc-val" style="color:var(--red)">${fmtR(perdas)}</div><div class="mc-sub">${APP.cancelamentos.length} ocorrências</div></div>
+    ${metaCard}`;
   // charts
   const plc={};d.forEach(p=>{if(!plc[p.plataforma])plc[p.plataforma]={r:0,o:0};plc[p.plataforma].r+=liq(p);plc[p.plataforma].o++;});
   const pClr={iFood:'#e84343','99Food':'#7aaee8','Anota Aí':'#b07ae8',Manual:'#7ac49e'};
