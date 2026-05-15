@@ -10,6 +10,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+// ── FIREBASE CONFIG ──
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCmtc_kYERl8k9ipNQ0slaecygUe0a4pxg",
+  authDomain: "izu-delivery.firebaseapp.com",
+  projectId: "izu-delivery",
+  storageBucket: "izu-delivery.firebasestorage.app",
+  messagingSenderId: "101061257245",
+  appId: "1:101061257245:web:d6a7bfc8e51945a9ed3ef4"
+};
+</script>
 <style>
 :root {
   /* IZU — Preto, Branco, Vermelho */
@@ -318,7 +329,10 @@ tr:hover td{background:var(--bg3);}
 <div class="main">
   <!-- TOPBAR -->
   <div class="topbar">
-    <span class="topbar-title" id="pg-title">Dashboard</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="topbar-title" id="pg-title">Dashboard</span>
+      <span id="sync-dot" title="Verificando conexão..." style="width:8px;height:8px;border-radius:50%;background:#e07030;flex-shrink:0;display:inline-block;cursor:help;"></span>
+    </div>
     <div class="topbar-right">
       <select class="sel-sm" id="g-store" onchange="refreshAll()"><option value="todas">Todas as lojas</option></select>
       <button class="btn btn-primary btn-sm" onclick="openM('m-pedido')">
@@ -641,35 +655,77 @@ let charts={},cview='rev',impData={};
 let dFrom='',dTo='';
 let qCents=0,qLoja='',qPlat='',qTurno='';
 
-// PERSIST
-// PERSIST — chunks de 2000 pedidos (localStorage tem limite ~5MB por chave)
+// PERSIST — localStorage (cache offline) + Firebase (sync em tempo real)
 const CHUNK=2000;
 const KEY_META='izu_meta', KEY_CHUNKS='izu_chunks', KEY_PFX='izu_p';
 
-function save(){
+// Firebase refs (preenchidos após initFirebase)
+let _db=null, _isSyncing=false, _syncReady=false;
+
+// ── LOCAL SAVE ──
+function saveLocal(){
   try{
-    // apaga chunks antigos
     let i=0;while(localStorage.getItem(KEY_PFX+i)!==null){localStorage.removeItem(KEY_PFX+i);i++;}
-    // meta (tudo exceto pedidos, que são grandes)
-    localStorage.setItem(KEY_META,JSON.stringify({
-      cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark
-    }));
-    // pedidos em chunks
-    const total=APP.pedidos.length;
-    const nChunks=total===0?0:Math.ceil(total/CHUNK);
-    localStorage.setItem(KEY_CHUNKS,String(nChunks));
-    for(let c=0;c<nChunks;c++){
-      localStorage.setItem(KEY_PFX+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
-    }
-  }catch(e){console.error('IZU save error:',e);}
+    localStorage.setItem(KEY_META,JSON.stringify({cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark}));
+    const nC=APP.pedidos.length===0?0:Math.ceil(APP.pedidos.length/CHUNK);
+    localStorage.setItem(KEY_CHUNKS,String(nC));
+    for(let c=0;c<nC;c++) localStorage.setItem(KEY_PFX+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
+  }catch(e){console.error('IZU local save:',e);}
 }
 
+// ── MAIN SAVE — local + firebase ──
+function save(){
+  saveLocal();
+  if(_syncReady) syncMetaToFirebase();
+}
+
+async function syncMetaToFirebase(){
+  if(!_db)return;
+  try{
+    const {doc,setDoc,getFirestore}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(_db,'config','meta'),{lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark});
+  }catch(e){}
+}
+
+// Salva um pedido individual no Firebase
+async function savePedidoFB(pedido, id){
+  if(!_db)return;
+  try{
+    const {doc,setDoc}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(_db,'pedidos',id), pedido);
+  }catch(e){console.error('savePedidoFB:',e);}
+}
+
+async function deletePedidoFB(id){
+  if(!_db)return;
+  try{
+    const {doc,deleteDoc}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await deleteDoc(doc(_db,'pedidos',id));
+  }catch(e){}
+}
+
+async function saveCancelFB(cancel, id){
+  if(!_db)return;
+  try{
+    const {doc,setDoc}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(_db,'cancelamentos',id), cancel);
+  }catch(e){}
+}
+
+async function deleteCancelFB(id){
+  if(!_db)return;
+  try{
+    const {doc,deleteDoc}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await deleteDoc(doc(_db,'cancelamentos',id));
+  }catch(e){}
+}
+
+// ── LOAD (local cache) ──
 function load(){
   APP.pedidos=[];APP.cancelamentos=[];
   APP.lojas=['Izu Japanese','Izu Poke','Izu Doces'];
   APP.taxas={iFood:0,'99Food':0,'Anota Aí':0,Manual:0};
   APP.dark=true;
-
   const metaRaw=localStorage.getItem(KEY_META);
   if(metaRaw){
     try{
@@ -678,32 +734,70 @@ function load(){
       if(Array.isArray(m.lojas)&&m.lojas.length)APP.lojas=m.lojas;
       if(m.taxas)APP.taxas=m.taxas;
       if(m.dark!==undefined)APP.dark=m.dark;
-    }catch(e){console.error('IZU meta parse error:',e);}
-    const nChunks=parseInt(localStorage.getItem(KEY_CHUNKS)||'0',10);
-    for(let c=0;c<nChunks;c++){
-      const raw=localStorage.getItem(KEY_PFX+c);
-      if(raw){try{APP.pedidos.push(...JSON.parse(raw));}catch(e){console.error('IZU chunk '+c+' error:',e);}}
-    }
-    console.log('IZU carregado:',APP.pedidos.length,'pedidos,',APP.cancelamentos.length,'cancelamentos');
+    }catch(e){}
+    const nC=parseInt(localStorage.getItem(KEY_CHUNKS)||'0',10);
+    for(let c=0;c<nC;c++){const r=localStorage.getItem(KEY_PFX+c);if(r)try{APP.pedidos.push(...JSON.parse(r));}catch(e){}}
     return;
   }
+  const leg=localStorage.getItem('izuv3');
+  if(leg){try{const o=JSON.parse(leg);if(Array.isArray(o.pedidos))APP.pedidos=o.pedidos;if(Array.isArray(o.cancelamentos))APP.cancelamentos=o.cancelamentos;if(Array.isArray(o.lojas)&&o.lojas.length)APP.lojas=o.lojas;if(o.taxas)APP.taxas=o.taxas;if(o.dark!==undefined)APP.dark=o.dark;saveLocal();localStorage.removeItem('izuv3');}catch(e){}}
+}
 
-  // fallback formato antigo (chave única 'izuv3')
-  const legacyRaw=localStorage.getItem('izuv3');
-  if(legacyRaw){
-    try{
-      const old=JSON.parse(legacyRaw);
-      if(Array.isArray(old.pedidos))APP.pedidos=old.pedidos;
-      if(Array.isArray(old.cancelamentos))APP.cancelamentos=old.cancelamentos;
-      if(Array.isArray(old.lojas)&&old.lojas.length)APP.lojas=old.lojas;
-      if(old.taxas)APP.taxas=old.taxas;
-      if(old.dark!==undefined)APP.dark=old.dark;
-      // migra para novo formato
-      save();
-      localStorage.removeItem('izuv3');
-      console.log('IZU migrado do formato antigo:',APP.pedidos.length,'pedidos');
-    }catch(e){console.error('IZU legacy parse error:',e);}
+// ── FIREBASE REAL-TIME SYNC ──
+window.startFirebaseSync = async function(firebaseConfig){
+  try{
+    showSyncDot('conectando');
+    const {initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const {getFirestore,collection,doc,onSnapshot,setDoc,deleteDoc,writeBatch}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+    const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig);
+    _db=getFirestore(app);
+    _syncReady=true;
+    window._db=_db;
+
+    // Ouve pedidos em tempo real
+    onSnapshot(collection(_db,'pedidos'),(snap)=>{
+      if(_isSyncing)return;
+      const arr=[];snap.forEach(d=>arr.push({...d.data(),_fid:d.id}));
+      APP.pedidos=arr;
+      saveLocal();refreshAll();
+      showSyncDot('online');
+    },(e)=>{console.error('pedidos listener:',e);showSyncDot('offline');});
+
+    // Ouve cancelamentos em tempo real
+    onSnapshot(collection(_db,'cancelamentos'),(snap)=>{
+      if(_isSyncing)return;
+      const arr=[];snap.forEach(d=>arr.push({...d.data(),_fid:d.id}));
+      APP.cancelamentos=arr;
+      saveLocal();
+      if(document.getElementById('page-cancelamentos').classList.contains('active'))renderCancels();
+    });
+
+    // Ouve config
+    onSnapshot(doc(_db,'config','meta'),(snap)=>{
+      if(snap.exists()){
+        const m=snap.data();
+        if(m.lojas)APP.lojas=m.lojas;
+        if(m.taxas)APP.taxas=m.taxas;
+        saveLocal();syncStores();
+      }
+    });
+
+    console.log('Firebase sincronizado ✓');
+  }catch(e){
+    console.error('Firebase init erro:',e);
+    showSyncDot('offline');
+    _syncReady=false;
   }
+}
+
+function showSyncDot(status){
+  const el=document.getElementById('sync-dot');
+  if(!el)return;
+  const colors={online:'#4caf82',offline:'#e03030',conectando:'#e07030'};
+  const labels={online:'Sincronizado ✓',offline:'Sem conexão — dados locais',conectando:'Conectando ao servidor...'};
+  el.style.background=colors[status]||'#999';
+  el.title=labels[status]||status;
 }
 
 // THEME
@@ -926,7 +1020,13 @@ function cancelDireto(idx){
   document.getElementById('c-id').value=p.idPedido||'';
   setValDisplay('c-val-d','c-val-r',p.valor||0);
 }
-function excluirPed(idx){if(!confirm('Excluir?'))return;APP.pedidos.splice(idx,1);save();renderPeds();notify('Excluído');}
+function excluirPed(idx){
+  if(!confirm('Excluir?'))return;
+  const p=APP.pedidos[idx];
+  if(_syncReady&&p&&p._fid){deletePedidoFB(p._fid);}
+  else{APP.pedidos.splice(idx,1);saveLocal();renderPeds();}
+  notify('Excluído');
+}
 
 // CANCELAMENTOS
 function renderCancels(){
@@ -979,24 +1079,50 @@ function salvarCancel(){
   let recup=getValFromHidden('c-rec-r');if(!recup)recup=getValFromDisp('c-rec-d');
   if(!data||valor<=0){notify('Preencha data e valor','e');return;}
   const obj={data,loja:document.getElementById('c-loja').value,plataforma:document.getElementById('c-plat').value,idPedido:document.getElementById('c-id').value,motivo:document.getElementById('c-motivo').value,contestacao:document.getElementById('c-cont').value,valor,recuperado:recup,obs:document.getElementById('c-obs').value};
-  if(idxStr!=='')APP.cancelamentos[parseInt(idxStr)]=obj;
-  else APP.cancelamentos.push(obj);
-  save();closeM('m-cancel');renderCancels();notify('Cancelamento salvo!');
+  const cid=idxStr!==''?(APP.cancelamentos[parseInt(idxStr)]._fid||gerarId()):gerarId();
+  obj._fid=cid;
+  if(_syncReady){
+    saveCancelFB(obj,cid);
+    notify('Cancelamento salvo!');
+  } else {
+    if(idxStr!=='')APP.cancelamentos[parseInt(idxStr)]=obj;
+    else APP.cancelamentos.push(obj);
+    saveLocal();renderCancels();notify('Cancelamento salvo! (offline)');
+  }
+  closeM('m-cancel');
 }
-function delCancel(idx){if(!confirm('Excluir?'))return;APP.cancelamentos.splice(idx,1);save();renderCancels();notify('Excluído');}
+function delCancel(idx){
+  if(!confirm('Excluir?'))return;
+  const c=APP.cancelamentos[idx];
+  if(_syncReady&&c&&c._fid){deleteCancelFB(c._fid);}
+  else{APP.cancelamentos.splice(idx,1);saveLocal();renderCancels();}
+  notify('Excluído');
+}
 
 // QUICK ORDER
 function getQVal(){return getValFromHidden('q-val-r')||getValFromDisp('q-val-d');}
+function gerarId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function salvarPed(status){
   if(!qLoja){notify('Selecione a loja','e');return;}
   if(!qPlat){notify('Selecione a plataforma','e');return;}
   if(!qTurno){notify('Selecione o turno','e');return;}
   const val=getQVal();
   if(val<=0){notify('Digite o valor','e');return;}
-  APP.pedidos.push({data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status});
-  save();closeM('m-pedido');notify(status==='Entregue'?'Pedido salvo!':'Salvo como cancelado!');
-  if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
-  if(document.getElementById('page-pedidos').classList.contains('active'))renderPeds();
+  const id=gerarId();
+  const pedido={_fid:id,data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status};
+  if(_syncReady){
+    // Firebase: salva direto, o onSnapshot atualiza a UI
+    savePedidoFB(pedido,id);
+    notify(status==='Entregue'?'Pedido salvo!':'Salvo como cancelado!');
+  } else {
+    // Offline: salva local
+    APP.pedidos.push(pedido);
+    saveLocal();
+    notify(status==='Entregue'?'Pedido salvo! (offline)':'Salvo como cancelado! (offline)');
+    if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
+    if(document.getElementById('page-pedidos').classList.contains('active'))renderPeds();
+  }
+  closeM('m-pedido');
 }
 function salvarCancelado(){
   if(!qLoja){notify('Selecione a loja','e');return;}
@@ -1005,8 +1131,11 @@ function salvarCancelado(){
   const val=getQVal();
   if(val<=0){notify('Digite o valor','e');return;}
   const pid=document.getElementById('q-id').value.trim();
-  APP.pedidos.push({data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:pid,desc:'',valor:val,taxa:0,taxaEntrega:0,status:'Cancelado'});
-  save();closeM('m-pedido');
+  const pedId=gerarId();
+  const pedCancel={_fid:pedId,data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:pid,desc:'',valor:val,taxa:0,taxaEntrega:0,status:'Cancelado'};
+  if(_syncReady){savePedidoFB(pedCancel,pedId);}
+  else{APP.pedidos.push(pedCancel);saveLocal();}
+  closeM('m-pedido');
   document.getElementById('c-idx').value='';
   document.getElementById('mc-title').textContent='Registrar cancelamento';
   document.getElementById('c-data').value=today();
@@ -1163,6 +1292,13 @@ function apagarTudo(){
 
 // INIT
 load();initDates();applyTheme();syncStores();renderDash();
+// Inicia sync Firebase se config estiver preenchida
+if(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey !== 'COLE_AQUI'){
+  window.startFirebaseSync(window.FIREBASE_CONFIG);
+} else {
+  showSyncDot('offline');
+  console.warn('Firebase não configurado — rodando em modo offline (localStorage apenas)');
+}
 // Dropzone drag
 const dz=document.getElementById('dropzone');
 if(dz){dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f){document.getElementById('finp').files=e.dataTransfer.files;handleImport({target:{files:e.dataTransfer.files}});}});}
