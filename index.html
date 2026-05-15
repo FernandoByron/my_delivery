@@ -557,7 +557,28 @@ tr:hover td{background:var(--bg3);}
       <div class="card">
         <div class="card-header"><span class="card-title">Preferências</span></div>
         <div class="card-body">
-          <div class="setrow"><div><div style="font-size:14px;">Modo noturno</div><div style="font-size:12px;color:var(--text3);">Tema escuro / claro</div></div><div class="sw on" id="sw-dark" onclick="toggleDark()"></div></div>
+          <div class="setrow">
+            <div><div style="font-size:14px;">Modo noturno</div><div style="font-size:12px;color:var(--text3);">Tema escuro / claro</div></div>
+            <div class="sw on" id="sw-dark" onclick="toggleDark()"></div>
+          </div>
+          <div class="setrow">
+            <div>
+              <div style="font-size:14px;">🔒 Trava de data</div>
+              <div style="font-size:12px;color:var(--text3);">Operadores só podem lançar no dia atual</div>
+            </div>
+            <div class="sw" id="sw-trava" onclick="toggleTrava()"></div>
+          </div>
+          <div id="pin-section" style="display:none;margin-top:10px;">
+            <div class="fg">
+              <label>PIN do gestor (4 dígitos)</label>
+              <div style="display:flex;gap:8px;">
+                <input type="password" inputmode="numeric" maxlength="4" id="pin-input" placeholder="••••"
+                  style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:18px;letter-spacing:6px;outline:none;width:100px;text-align:center;">
+                <button class="btn btn-primary btn-sm" onclick="salvarPin()">Salvar PIN</button>
+              </div>
+              <span class="fhint">Use este PIN para desbloquear lançamentos retroativos</span>
+            </div>
+          </div>
           <div class="setrow"><div><div style="font-size:14px;">Exportar backup</div><div style="font-size:12px;color:var(--text3);">Arquivo JSON com todos os dados</div></div><button class="btn btn-ghost btn-sm" onclick="exportDados()">Exportar</button></div>
           <div class="setrow"><div><div style="font-size:14px;">Importar backup</div><div style="font-size:12px;color:var(--text3);">Restaurar de arquivo JSON</div></div><button class="btn btn-ghost btn-sm" onclick="document.getElementById('bkinp').click()">Importar</button></div>
           <div class="setrow"><div><div style="font-size:14px;color:var(--red);">Apagar tudo</div><div style="font-size:12px;color:var(--text3);">Remove todos os pedidos</div></div><button class="btn btn-danger btn-sm" onclick="apagarTudo()">Apagar</button></div>
@@ -615,6 +636,12 @@ tr:hover td{background:var(--bg3);}
           <div class="pb" onclick="selP(this,'Anota Aí')">Anota Aí</div>
           <div class="pb" onclick="selP(this,'Manual')">Manual</div>
         </div>
+      </div>
+
+      <!-- DATA (só aparece quando desbloqueado) -->
+      <div class="fg" id="q-data-wrap" style="display:none;">
+        <label>Data do pedido <span style="color:var(--accent);font-size:10px;">🔓 desbloqueado</span></label>
+        <input type="date" id="q-data-custom">
       </div>
 
       <!-- ID -->
@@ -723,7 +750,7 @@ let _db=null, _isSyncing=false, _syncReady=false;
 function saveLocal(){
   try{
     let i=0;while(localStorage.getItem(KEY_PFX+i)!==null){localStorage.removeItem(KEY_PFX+i);i++;}
-    localStorage.setItem(KEY_META,JSON.stringify({cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,metas:APP.metas||{},dark:APP.dark}));
+    localStorage.setItem(KEY_META,JSON.stringify({cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,metas:APP.metas||{},dark:APP.dark,trava:APP.trava||false,pin:APP.pin||''}));
     const nC=APP.pedidos.length===0?0:Math.ceil(APP.pedidos.length/CHUNK);
     localStorage.setItem(KEY_CHUNKS,String(nC));
     for(let c=0;c<nC;c++) localStorage.setItem(KEY_PFX+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
@@ -740,7 +767,7 @@ async function syncMetaToFirebase(){
   if(!_db)return;
   try{
     const {doc,setDoc,getFirestore}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await setDoc(doc(_db,'config','meta'),{lojas:APP.lojas,taxas:APP.taxas,metas:APP.metas||{},dark:APP.dark});
+    await setDoc(doc(_db,'config','meta'),{lojas:APP.lojas,taxas:APP.taxas,metas:APP.metas||{},dark:APP.dark,trava:APP.trava||false,pin:APP.pin||''});
   }catch(e){}
 }
 
@@ -793,6 +820,8 @@ function load(){
       if(m.taxas)APP.taxas=m.taxas;
       if(m.metas)APP.metas=m.metas;
       if(m.dark!==undefined)APP.dark=m.dark;
+      if(m.trava!==undefined)APP.trava=m.trava;
+      if(m.pin)APP.pin=m.pin;
     }catch(e){}
     const nC=parseInt(localStorage.getItem(KEY_CHUNKS)||'0',10);
     for(let c=0;c<nC;c++){const r=localStorage.getItem(KEY_PFX+c);if(r)try{APP.pedidos.push(...JSON.parse(r));}catch(e){}}
@@ -839,6 +868,8 @@ window.startFirebaseSync = async function(firebaseConfig){
         if(m.lojas)APP.lojas=m.lojas;
         if(m.taxas)APP.taxas=m.taxas;
         if(m.metas)APP.metas=m.metas;
+        if(m.trava!==undefined)APP.trava=m.trava;
+        if(m.pin)APP.pin=m.pin;
         saveLocal();syncStores();
         // Atualiza página de metas se estiver aberta
         if(document.getElementById('page-metas').classList.contains('active'))renderMetas();
@@ -876,6 +907,48 @@ function applyTheme(){
 // Theme toggle also accessible from config page (mobile has no sidebar)
 function toggleDarkFromConfig(){APP.dark=!APP.dark;save();applyTheme();}
 function toggleDark(){APP.dark=!APP.dark;save();applyTheme();}
+
+// ── TRAVA DE DATA ──
+function toggleTrava(){
+  if(!APP.trava){
+    // Ativando trava — pede PIN
+    const pin=prompt('Defina um PIN de 4 dígitos para o gestor:');
+    if(!pin||pin.length<4){notify('PIN inválido','e');return;}
+    APP.trava=true;
+    APP.pin=pin;
+    save();renderConf();notify('Trava ativada! PIN salvo.');
+  } else {
+    // Desativando — pede PIN
+    const pin=prompt('Digite o PIN do gestor para desativar a trava:');
+    if(pin!==APP.pin){notify('PIN incorreto','e');return;}
+    APP.trava=false;
+    save();renderConf();notify('Trava desativada.');
+  }
+}
+function salvarPin(){
+  const pin=document.getElementById('pin-input').value;
+  if(!pin||pin.length<4){notify('PIN deve ter 4 dígitos','e');return;}
+  APP.pin=pin;save();notify('PIN salvo!');
+}
+let _desbloqueado=false; // sessão atual
+function solicitarDesbloqueio(){
+  if(_desbloqueado){
+    // Bloquear novamente
+    _desbloqueado=false;
+    document.getElementById('q-data-wrap').style.display='none';
+    const btn=document.getElementById('btn-unlock');
+    if(btn){btn.textContent='🔒 Data livre';btn.style.color='';}
+    return;
+  }
+  const pin=prompt('PIN do gestor:');
+  if(pin!==APP.pin){notify('PIN incorreto','e');return;}
+  _desbloqueado=true;
+  const wrap=document.getElementById('q-data-wrap');
+  if(wrap){wrap.style.display='block';document.getElementById('q-data-custom').value=today();}
+  const btn=document.getElementById('btn-unlock');
+  if(btn){btn.textContent='🔓 Bloqueado';btn.style.color='var(--green)';}
+  notify('Data desbloqueada para este lançamento');
+}
 
 // DATE
 // DATE — local timezone (corrige bug de "amanhã" causado por UTC)
@@ -1181,7 +1254,8 @@ function salvarPed(status){
   const val=getQVal();
   if(val<=0){notify('Digite o valor','e');return;}
   const id=gerarId();
-  const pedido={_fid:id,data:turnoDate(),turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status};
+  const dataFinal=_desbloqueado&&document.getElementById('q-data-custom')?.value?document.getElementById('q-data-custom').value:turnoDate();
+  const pedido={_fid:id,data:dataFinal,turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status};
   if(_syncReady){
     // Firebase: salva direto, o onSnapshot atualiza a UI
     savePedidoFB(pedido,id);
@@ -1194,6 +1268,10 @@ function salvarPed(status){
     if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
     if(document.getElementById('page-pedidos').classList.contains('active'))renderPeds();
   }
+  // Reset unlock after save
+  _desbloqueado=false;
+  const dw=document.getElementById('q-data-wrap');if(dw)dw.style.display='none';
+  const bu=document.getElementById('btn-unlock');if(bu){bu.textContent='🔒 Data livre';bu.style.color='';}
   closeM('m-pedido');
 }
 function salvarCancelado(){
@@ -1432,6 +1510,8 @@ function cancelImport(){document.getElementById('mapsec').style.display='none';d
 function renderConf(){
   document.getElementById('list-lojas').innerHTML=APP.lojas.map((l,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">${storeBadge(l)}<button class="btn btn-danger btn-sm" onclick="remLoja(${i})">Remover</button></div>`).join('');
   const sw=document.getElementById('sw-dark');if(sw)sw.classList.toggle('on',APP.dark);
+  const st=document.getElementById('sw-trava');if(st)st.classList.toggle('on',!!APP.trava);
+  const ps=document.getElementById('pin-section');if(ps)ps.style.display=APP.trava?'block':'none';
 }
 function addLoja(){const i=document.getElementById('nova-loja');const n=i.value.trim();if(!n)return;if(APP.lojas.includes(n)){notify('Já existe','e');return;}APP.lojas.push(n);save();i.value='';renderConf();syncStores();notify('Loja adicionada!');}
 function remLoja(i){if(!confirm('Remover?'))return;APP.lojas.splice(i,1);save();renderConf();syncStores();}
@@ -1454,6 +1534,11 @@ function openM(id){
     document.querySelectorAll('#q-plats .pb').forEach(b=>b.className='pb');
     renderQStores();
     initTurnos();
+    // Trava de data
+    _desbloqueado=false;
+    const dw=document.getElementById('q-data-wrap');if(dw)dw.style.display='none';
+    const bu=document.getElementById('btn-unlock');
+    if(bu)bu.style.display=APP.trava?'inline-flex':'none';
     // focus value field
     setTimeout(()=>{if(vd)vd.focus();},100);
   }
