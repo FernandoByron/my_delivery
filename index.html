@@ -963,7 +963,7 @@ function toggleTrava(){
   } else {
     // Desativando — pede PIN
     const pin=prompt('Digite o PIN do gestor para desativar a trava:');
-    if(pin!==APP.pin){notify('PIN incorreto','e');return;}
+    if(pin!==String(APP.pin)){notify('PIN incorreto','e');return;}
     APP.trava=false;
     save();renderConf();notify('Trava desativada.');
   }
@@ -985,8 +985,12 @@ function solicitarDesbloqueio(){
     const lf=document.getElementById('lote-fields');if(lf)lf.style.display='none';
     return;
   }
-  const pin=prompt('PIN do gestor:');
-  if(pin!==APP.pin){notify('PIN incorreto','e');return;}
+  // Se não tem PIN definido, acessa direto
+  if(APP.pin){
+    const pin=prompt('PIN do gestor:');
+    if(pin===null)return; // cancelou
+    if(pin!==String(APP.pin)){notify('PIN incorreto','e');return;}
+  }
   _desbloqueado=true;
   const wrap=document.getElementById('q-data-wrap');
   if(wrap){wrap.style.display='block';document.getElementById('q-data-custom').value=today();}
@@ -1318,19 +1322,39 @@ function salvarPed(status){
   if(!qLoja){notify('Selecione a loja','e');return;}
   if(!qPlat){notify('Selecione a plataforma','e');return;}
   if(!qTurno){notify('Selecione o turno','e');return;}
+  const dataFinal=_desbloqueado&&document.getElementById('q-data-custom')?.value?document.getElementById('q-data-custom').value:turnoDate();
+
+  // ── MODO LOTE ──
+  if(_modoLote){
+    const qtd=parseInt((document.getElementById('lote-qtd')?.value||'0').replace(/[^0-9]/g,''))||0;
+    const totalCents=parseInt(document.getElementById('lote-total-r')?.value||'0')||0;
+    const total=totalCents/100;
+    if(qtd<=0){notify('Digite a quantidade de pedidos','e');return;}
+    if(total<=0){notify('Digite o valor total do período','e');return;}
+    const ticket=Math.round(total/qtd*100)/100;
+    for(let i=0;i<qtd;i++){
+      const id=gerarId()+'l'+i;
+      const ped={_fid:id,data:dataFinal,turno:qTurno,loja:qLoja,plataforma:qPlat,
+        idPedido:'',desc:'Lançamento em lote',valor:ticket,taxa:0,taxaEntrega:0,status:'Entregue'};
+      if(_syncReady){savePedidoFB(ped,id);}
+      else APP.pedidos.push(ped);
+    }
+    if(!_syncReady){saveLocal();if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();}
+    notify(qtd+' pedidos lançados! Total '+fmtR(total));
+    resetModoGestor();closeM('m-pedido');return;
+  }
+
+  // ── MODO NORMAL ──
   const val=getQVal();
   if(val<=0){notify('Digite o valor','e');return;}
   const id=gerarId();
-  const dataFinal=_desbloqueado&&document.getElementById('q-data-custom')?.value?document.getElementById('q-data-custom').value:turnoDate();
-  const pedido={_fid:id,data:dataFinal,turno:qTurno,loja:qLoja,plataforma:qPlat,idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status};
+  const pedido={_fid:id,data:dataFinal,turno:qTurno,loja:qLoja,plataforma:qPlat,
+    idPedido:document.getElementById('q-id').value.trim(),desc:'',valor:val,taxa:0,taxaEntrega:0,status};
   if(_syncReady){
-    // Firebase: salva direto, o onSnapshot atualiza a UI
     savePedidoFB(pedido,id);
     notify(status==='Entregue'?'Pedido salvo!':'Salvo como cancelado!');
   } else {
-    // Offline: salva local
-    APP.pedidos.push(pedido);
-    saveLocal();
+    APP.pedidos.push(pedido);saveLocal();
     notify(status==='Entregue'?'Pedido salvo! (offline)':'Salvo como cancelado! (offline)');
     if(document.getElementById('page-dashboard').classList.contains('active'))renderDash();
     if(document.getElementById('page-pedidos').classList.contains('active'))renderPeds();
