@@ -594,8 +594,14 @@ tr:hover td{background:var(--bg3);}
 <!-- MODAL: NOVO PEDIDO (caixa) -->
 <div class="moverlay" id="m-pedido">
   <div class="modal" style="max-width:420px;">
-    <div class="mhdr"><span class="mtitle">Novo pedido</span><button class="bicon" onclick="closeM('m-pedido')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
-    <div class="mbody" style="display:flex;flex-direction:column;gap:14px;">
+    <div class="mhdr">
+      <span class="mtitle">Novo pedido</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-ghost btn-sm" id="btn-unlock" onclick="solicitarDesbloqueio()" style="font-size:11px;padding:4px 10px;display:none;">🔒 Data livre</button>
+        <button class="bicon" onclick="closeM('m-pedido')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>
+    <div class="mbody" style="display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:calc(90vh - 130px);">
 
       <!-- VALOR -->
       <div class="fg">
@@ -1538,7 +1544,7 @@ function openM(id){
     _desbloqueado=false;
     const dw=document.getElementById('q-data-wrap');if(dw)dw.style.display='none';
     const bu=document.getElementById('btn-unlock');
-    if(bu)bu.style.display=APP.trava?'inline-flex':'none';
+    if(bu){bu.style.display=APP.trava?'inline-flex':'none';bu.textContent='🔒 Data livre';bu.style.color='';}
     // focus value field
     setTimeout(()=>{if(vd)vd.focus();},100);
   }
