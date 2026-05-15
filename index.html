@@ -614,7 +614,7 @@ tr:hover td{background:var(--bg3);}
             autocomplete="off">
         </div>
         <input type="hidden" id="q-val-r">
-        <span class="fhint">Digite os números — a vírgula entra automática</span>
+        <span class="fhint" id="q-val-hint">Digite os números — a vírgula entra automática</span>
       </div>
 
       <!-- TURNO -->
@@ -1015,6 +1015,11 @@ function toggleLote(){
   _modoLote=!_modoLote;
   const sl=document.getElementById('sw-lote');if(sl)sl.classList.toggle('on',_modoLote);
   const lf=document.getElementById('lote-fields');if(lf)lf.style.display=_modoLote?'block':'none';
+  // Ensure valor field always visible
+  const vw=document.getElementById('q-val-wrap');if(vw)vw.style.display='flex';
+  // Update hint
+  const hint=document.getElementById('q-val-hint');
+  if(hint)hint.textContent=_modoLote?'Este será o valor TOTAL dividido pela quantidade':'Digite os números — a vírgula entra automática';
   if(_modoLote)calcTicketLote();
 }
 function calcTicketLote(){
@@ -1637,6 +1642,7 @@ function openM(id){
   if(id==='m-pedido'){
     qPlat='';qLoja=APP.lojas[0]||'';
     const vd=document.getElementById('q-val-d');if(vd)vd.value='';
+    const vw=document.getElementById('q-val-wrap');if(vw)vw.style.display='flex';
     const vr=document.getElementById('q-val-r');if(vr)vr.value='0';
     document.getElementById('q-id').value='';
     document.querySelectorAll('#q-plats .pb').forEach(b=>b.className='pb');
