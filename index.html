@@ -210,117 +210,123 @@ tr:hover td{background:var(--bg3);}
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
-/* ── MOBILE APP LAYOUT ── */
+/* ── MOBILE ── */
 @media(max-width:768px){
-  /* RESET OVERFLOW */
-  html{overflow-x:hidden;}
-  body{overflow-x:hidden;overflow-y:auto;max-width:100vw;-webkit-overflow-scrolling:touch;}
+  /* Prevent horizontal scroll */
+  html,body{overflow-x:hidden;}
 
-  /* Sidebar some, sem margem */
-  .sidebar{display:none;}
-  .main{margin-left:0;width:100vw;overflow-x:hidden;overflow-y:visible;}
+  /* Kill desktop layout */
+  .sidebar{display:none !important;}
+  .main{margin-left:0 !important;width:100% !important;}
+  /* Scroll wrapper: offset below topbar(48) + tabbar(50) */
+  #scroll-wrap{margin-top:50px;height:calc(100vh - 98px);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
 
   /* Topbar */
-  .topbar{padding:0 14px;height:50px;}
-  .main{padding-top:52px;} /* space for tab bar below topbar */
+  .topbar{padding:0 12px;height:48px;}
   .topbar-title{font-size:14px;}
-  .topbar-right .sel-sm{display:none;}
-  .topbar-right .btn-primary{display:none;}
+  .topbar-right .sel-sm,.topbar-right .btn-primary{display:none;}
 
-  /* Date bar: scroll horizontal, sem quebrar */
-  .datebar{padding:8px 12px;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;box-sizing:border-box;position:relative;}
+  /* Date chips: horizontal scroll */
+  .datebar{
+    padding:7px 12px;gap:5px;
+    flex-wrap:nowrap;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
   .datebar::-webkit-scrollbar{display:none;}
-  .datebar .datesep,.dateinp{display:none;}
+  .dateinp,.datesep{display:none;}
+  .chip{padding:5px 11px;font-size:11px;white-space:nowrap;flex-shrink:0;}
 
-  /* Content */
-  .content{padding:12px;padding-top:16px;padding-bottom:20px;width:100%;box-sizing:border-box;overflow-x:hidden;}
+  /* Content: top offset = topbar(48) + tabbar(50) + datebar(~38) */
+  .content{
+    padding:12px 12px 20px;
+  }
 
-  /* Grids: tudo em coluna única */
+  /* Grids */
   .grid2,.grid3,.qgrid,.fgrid,.fgrid3{grid-template-columns:1fr !important;}
-
-  /* Metrics: 2 colunas */
   .metrics{grid-template-columns:1fr 1fr;gap:8px;}
-  .mc{padding:12px 13px;}
-  .mc-val{font-size:16px;}
+  .mc{padding:11px 12px;}
+  .mc-val{font-size:15px;}
   .mc-lbl{font-size:9px;}
+  .mc-sub{font-size:10px;}
 
   /* Cards */
-  .card{margin-bottom:12px;}
-  .card-header{padding:10px 13px;flex-wrap:wrap;gap:7px;}
+  .card{margin-bottom:11px;}
+  .card-header{padding:10px 12px;flex-wrap:wrap;gap:6px;}
   .card-title{font-size:12px;}
-  .card-body{padding:13px;}
+  .card-body{padding:12px;}
 
-  /* Tables: scroll horizontal dentro do card */
-  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
-  .tw table{min-width:480px;font-size:11px;}
-  th,td{padding:6px 8px;white-space:nowrap;}
+  /* Tables */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .tw table{min-width:460px;font-size:11px;}
+  th,td{padding:5px 7px;white-space:nowrap;}
 
-  /* Modal: sobe de baixo */
-  .moverlay{padding:0 !important;align-items:flex-end;}
-  .modal{max-width:100% !important;width:100%;border-radius:16px 16px 0 0;max-height:88vh;}
+  /* Modal slides up from bottom */
+  .moverlay{padding:0 !important;align-items:flex-end !important;}
+  .modal{
+    max-width:100% !important;width:100% !important;
+    border-radius:16px 16px 0 0;
+    max-height:90vh;
+  }
   .mbody{padding:16px;}
   .mhdr{padding:14px 16px 12px;}
-  .mftr{padding:12px 16px;}
+  .mftr{padding:12px 16px;gap:8px;}
+  .mftr .btn{flex:1;justify-content:center;}
 
-  /* Inputs maiores para touch */
-  .fg input,.fg select,.fg textarea{font-size:16px;padding:11px 12px;}
+  /* Inputs — 16px prevents iOS zoom */
+  .fg input,.fg select,.fg textarea{font-size:16px !important;padding:11px 12px;}
 
-  /* Botões plataforma/loja maiores */
-  .platbtns{grid-template-columns:1fr 1fr;gap:8px;}
-  .pb{padding:13px 8px;font-size:13px;}
-  .storebtns{gap:7px;}
-  .sb{padding:13px 14px;font-size:14px;}
+  /* Bigger tap targets */
+  .pb{padding:13px 6px;font-size:13px;}
+  .sb{padding:12px 13px;font-size:14px;}
+  .btn{padding:10px 14px;}
 
-  /* Tab bar visível */
-  .tab-bar{display:flex;}
-
-  /* FAB posicionado acima da tab bar */
-  .fab{bottom:24px;}
-
-  /* Chips de data menores */
-  .chip{padding:5px 10px;font-size:11px;}
-
-  /* Charts: altura menor */
-  #ch-plat,#ch-store,#ch-daily{max-height:180px;}
+  /* Tab bar */
+  .tab-bar{display:flex !important;}
+  .fab{display:flex !important;bottom:20px;right:18px;}
 }
 
-/* Bottom Tab Bar — hidden on desktop */
+/* ── TAB BAR (mobile nav, hidden on desktop) ── */
 .tab-bar{
   display:none;
-  position:fixed;top:50px;left:0;right:0;
+  position:fixed;
+  top:48px; /* right below topbar */
+  left:0;right:0;
+  height:50px;
   background:var(--bg2);
-  border-bottom:1px solid var(--border);
-  z-index:200;
-  padding:0;
-  box-shadow:0 2px 8px rgba(0,0,0,0.3);
-  height:52px;
+  border-bottom:2px solid var(--border);
+  z-index:500;
   flex-direction:row;
+  box-shadow:0 2px 10px rgba(0,0,0,0.25);
 }
 .tab-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:6px 4px;cursor:pointer;color:var(--text3);transition:color .15s;
-  font-family:var(--font-body);gap:2px;border:none;background:none;
-  -webkit-tap-highlight-color:transparent;min-height:52px;
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:2px;padding:4px 2px;
+  cursor:pointer;border:none;background:none;
+  color:var(--text3);
+  font-family:var(--font-body);
+  -webkit-tap-highlight-color:transparent;
+  transition:color .15s;
 }
-.tab-item svg{width:19px;height:19px;flex-shrink:0;}
+.tab-item svg{width:18px;height:18px;flex-shrink:0;}
+.tab-item span{font-size:9px;font-weight:500;letter-spacing:.2px;}
 .tab-item.active{color:var(--accent);}
-.tab-item.active svg{stroke:var(--accent);}
-.tab-item span{font-size:9px;font-weight:500;}
 
-/* FAB: Novo pedido button on mobile */
+/* ── FAB ── */
 .fab{
-  display:none;position:fixed;bottom:24px;right:20px;
-  width:56px;height:56px;border-radius:50%;
+  display:none;
+  position:fixed;bottom:20px;right:18px;
+  width:54px;height:54px;border-radius:50%;
   background:var(--accent);color:#fff;border:none;
-  font-size:28px;cursor:pointer;z-index:199;
-  box-shadow:0 4px 20px rgba(224,48,48,0.5);
+  font-size:26px;line-height:1;
+  cursor:pointer;z-index:499;
+  box-shadow:0 4px 18px rgba(224,48,48,0.5);
   align-items:center;justify-content:center;
   -webkit-tap-highlight-color:transparent;
-  transition:transform .15s;
-  line-height:1;
+  transition:transform .12s;
 }
-.fab:active{transform:scale(0.93);}
-@media(max-width:768px){.fab{display:flex;}}
+.fab:active{transform:scale(0.92);}
 </style>
 </head>
 <body>
@@ -337,7 +343,7 @@ tr:hover td{background:var(--bg3);}
     <div class="nav-item" onclick="goPage('pedidos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><span>Pedidos</span></div>
     <div class="nav-item" onclick="goPage('cancelamentos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>Cancelamentos</span></div>
     <div class="nav-section">Financeiro</div>
-    <div class="nav-item" onclick="goPage('taxas',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span>Taxas</span></div>
+    <div class="nav-item" onclick="goPage('metas',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Metas</span></div>
     <div class="nav-item" onclick="goPage('relatorio',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg><span>Relatórios</span></div>
     <div class="nav-section">Sistema</div>
     <div class="nav-item" onclick="goPage('importar',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Importar</span></div>
@@ -368,6 +374,8 @@ tr:hover td{background:var(--bg3);}
     </div>
   </div>
 
+  <!-- MOBILE SCROLL WRAPPER: pushes content below topbar+tabbar on mobile -->
+  <div id="scroll-wrap" style="flex:1;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <!-- DATE BAR -->
   <div class="datebar">
     <button class="chip" onclick="setChip('hoje',this)">Hoje</button>
@@ -412,6 +420,10 @@ tr:hover td{background:var(--bg3);}
       <div class="card"><div class="card-header"><span class="card-title">Ticket médio por loja</span></div><div class="card-body" id="d-ticket"></div></div>
     </div>
     <div class="card">
+      <div class="card-header"><span class="card-title">📅 Comparativo de meses</span><span style="font-size:11px;color:var(--text3)">linha vermelha = meta</span></div>
+      <div class="card-body" id="dash-comparativo"></div>
+    </div>
+    <div class="card">
       <div class="card-header"><span class="card-title">Pedidos recentes</span></div>
       <div class="tw"><table><thead><tr><th>Data</th><th>Turno</th><th>Loja</th><th>Plataforma</th><th>ID</th><th>Bruto</th><th>Status</th></tr></thead><tbody id="d-recent"></tbody></table></div>
     </div>
@@ -449,15 +461,33 @@ tr:hover td{background:var(--bg3);}
     </div>
   </div>
 
-  <!-- TAXAS -->
-  <div class="page" id="page-taxas">
-    <div class="alert alert-info">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <div>A taxa de entrega é informada pela própria plataforma no relatório exportado — será importada automaticamente. Configure aqui apenas as taxas de comissão (%).</div>
-    </div>
+  <!-- METAS -->
+  <div class="page" id="page-metas">
+    <!-- Meta do mês -->
     <div class="card">
-      <div class="card-header"><span class="card-title">Comissão por plataforma</span></div>
-      <div class="card-body"><div id="taxas-form"></div><button class="btn btn-primary" style="margin-top:13px;" onclick="salvarTaxas()">Salvar</button></div>
+      <div class="card-header">
+        <span class="card-title">🎯 Meta do mês</span>
+        <button class="btn btn-primary btn-sm" onclick="salvarMeta()">Salvar</button>
+      </div>
+      <div class="card-body">
+        <div class="fgrid">
+          <div class="fg">
+            <label>Mês de referência</label>
+            <input type="month" id="meta-mes" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;width:100%;">
+          </div>
+          <div class="fg">
+            <label>Valor da meta (R$)</label>
+            <div class="cwrap"><span class="cpfx">R$</span><input type="tel" inputmode="numeric" id="meta-val-d" placeholder="0,00" oninput="parseCur(this,'meta-val-r')"><input type="hidden" id="meta-val-r"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Progresso atual -->
+    <div id="metas-progress"></div>
+    <!-- Histórico de metas -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Histórico de metas</span></div>
+      <div class="tw"><table><thead><tr><th>Mês</th><th>Meta</th><th>Realizado</th><th>%</th><th>Status</th><th></th></tr></thead><tbody id="tb-metas"></tbody></table></div>
     </div>
   </div>
 
@@ -540,6 +570,7 @@ tr:hover td{background:var(--bg3);}
   </div>
 
   </div><!-- /content -->
+  </div><!-- /scroll-wrap -->
 </div><!-- /main -->
 </div><!-- /layout -->
 
@@ -661,6 +692,10 @@ tr:hover td{background:var(--bg3);}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
     <span>Cancelados</span>
   </button>
+  <button class="tab-item" onclick="goPageMobile('metas',this)" id="tab-metas">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    <span>Metas</span>
+  </button>
   <button class="tab-item" onclick="goPageMobile('relatorio',this)" id="tab-relatorio">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
     <span>Relatório</span>
@@ -692,7 +727,7 @@ let _db=null, _isSyncing=false, _syncReady=false;
 function saveLocal(){
   try{
     let i=0;while(localStorage.getItem(KEY_PFX+i)!==null){localStorage.removeItem(KEY_PFX+i);i++;}
-    localStorage.setItem(KEY_META,JSON.stringify({cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark}));
+    localStorage.setItem(KEY_META,JSON.stringify({cancelamentos:APP.cancelamentos,lojas:APP.lojas,taxas:APP.taxas,metas:APP.metas||{},dark:APP.dark}));
     const nC=APP.pedidos.length===0?0:Math.ceil(APP.pedidos.length/CHUNK);
     localStorage.setItem(KEY_CHUNKS,String(nC));
     for(let c=0;c<nC;c++) localStorage.setItem(KEY_PFX+c,JSON.stringify(APP.pedidos.slice(c*CHUNK,(c+1)*CHUNK)));
@@ -751,6 +786,7 @@ function load(){
   APP.pedidos=[];APP.cancelamentos=[];
   APP.lojas=['Izu Japanese','Izu Poke','Izu Doces'];
   APP.taxas={iFood:0,'99Food':0,'Anota Aí':0,Manual:0};
+  if(!APP.metas)APP.metas={};
   APP.dark=true;
   const metaRaw=localStorage.getItem(KEY_META);
   if(metaRaw){
@@ -759,6 +795,7 @@ function load(){
       if(Array.isArray(m.cancelamentos))APP.cancelamentos=m.cancelamentos;
       if(Array.isArray(m.lojas)&&m.lojas.length)APP.lojas=m.lojas;
       if(m.taxas)APP.taxas=m.taxas;
+      if(m.metas)APP.metas=m.metas;
       if(m.dark!==undefined)APP.dark=m.dark;
     }catch(e){}
     const nC=parseInt(localStorage.getItem(KEY_CHUNKS)||'0',10);
@@ -925,14 +962,14 @@ function renderQStores(){
 }
 
 // NAV
-const pgTitles={dashboard:'Dashboard',pedidos:'Pedidos',cancelamentos:'Cancelamentos',taxas:'Taxas',relatorio:'Relatórios',importar:'Importar',config:'Configurações'};
+const pgTitles={dashboard:'Dashboard',pedidos:'Pedidos',cancelamentos:'Cancelamentos',metas:'Metas',relatorio:'Relatórios',importar:'Importar',config:'Configurações'};
 function goPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
   document.getElementById('pg-title').textContent=pgTitles[id]||id;
-  ({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,taxas:renderTaxas,relatorio:renderRelatorio,config:renderConf}[id]||function(){})();
+  ({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,metas:renderMetas,relatorio:renderRelatorio,config:renderConf}[id]||function(){})();
 }
 // Mobile tab navigation
 function goPageMobile(id,el){
@@ -946,10 +983,10 @@ function goPageMobile(id,el){
     if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');
   });
   document.getElementById('pg-title').textContent=pgTitles[id]||id;
-  ({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,taxas:renderTaxas,relatorio:renderRelatorio,config:renderConf}[id]||function(){})();
+  ({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,metas:renderMetas,relatorio:renderRelatorio,config:renderConf}[id]||function(){})();
   window.scrollTo(0,0);
 }
-function refreshAll(){const a=document.querySelector('.page.active');if(!a)return;const id=a.id.replace('page-','');({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,relatorio:renderRelatorio}[id]||function(){})();}
+function refreshAll(){const a=document.querySelector('.page.active');if(!a)return;const id=a.id.replace('page-','');({dashboard:renderDash,pedidos:renderPeds,cancelamentos:renderCancels,metas:renderMetas,relatorio:renderRelatorio}[id]||function(){})();}
 
 // FILTER
 function filtPeds(noCancel){
@@ -996,6 +1033,7 @@ function renderDash(){
   const ts={};d.forEach(p=>{if(!ts[p.loja])ts[p.loja]={s:0,n:0};ts[p.loja].s+=p.valor||0;ts[p.loja].n++;});
   document.getElementById('d-ticket').innerHTML=Object.entries(ts).map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;">${storeBadge(l)}<span style="font-weight:500;color:var(--accent)">${fmtR(v.n?v.s/v.n:0)}</span></div>`).join('')||'<p style="color:var(--text3);font-size:13px">Sem dados</p>';
   // recent
+  renderComparativoMeses();
   document.getElementById('d-recent').innerHTML=[...d].reverse().slice(0,8).map(p=>`<tr><td>${p.data}</td><td>${turnoBadge(p.turno)}</td><td>${storeBadge(p.loja)}</td><td>${platBadge(p.plataforma)}</td><td style="color:var(--text3);font-size:12px">${p.idPedido||'—'}</td><td>${fmtR(p.valor)}</td><td>${stBadge(p.status)}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">Nenhum pedido no período</td></tr>';
 }
 
@@ -1174,13 +1212,155 @@ function salvarCancelado(){
 }
 
 // TAXAS
-function renderTaxas(){
-  const plats=['iFood','99Food','Anota Aí','Manual'];
-  document.getElementById('taxas-form').innerHTML=plats.map(pl=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">${platBadge(pl)}<div style="display:flex;align-items:center;gap:7px;"><input type="number" class="ti" data-p="${pl}" value="${APP.taxas[pl]||0}" step="0.1" min="0" max="100" style="width:65px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:5px 8px;color:var(--text);font-family:var(--font-body);font-size:14px;text-align:right;outline:none;"><span style="color:var(--text3)">%</span></div></div>`).join('');
-}
-function salvarTaxas(){document.querySelectorAll('.ti').forEach(i=>{APP.taxas[i.dataset.p]=parseFloat(i.value)||0;});save();notify('Taxas salvas!');}
+// renderTaxas removido
 
 // RELATÓRIO
+// ── METAS ──
+function salvarMeta(){
+  const mes=document.getElementById('meta-mes').value;
+  if(!mes){notify('Selecione o mês','e');return;}
+  const val=getValFromHidden('meta-val-r')||getValFromDisp('meta-val-d');
+  if(val<=0){notify('Digite o valor da meta','e');return;}
+  if(!APP.metas)APP.metas={};
+  APP.metas[mes]=val;
+  save();renderMetas();notify('Meta salva!');
+}
+function excluirMeta(mes){
+  if(!confirm('Excluir meta?'))return;
+  delete APP.metas[mes];save();renderMetas();notify('Excluído');
+}
+function renderMetas(){
+  if(!APP.metas)APP.metas={};
+  // Pre-fill current month
+  const hoje=new Date();
+  const mesAtual=hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0');
+  const metaInp=document.getElementById('meta-mes');
+  if(metaInp&&!metaInp.value)metaInp.value=mesAtual;
+
+  // Progress card for current month
+  const metaAtual=APP.metas[mesAtual]||0;
+  const diasNoMes=new Date(hoje.getFullYear(),hoje.getMonth()+1,0).getDate();
+  const diaAtual=hoje.getDate();
+  const diasRestantes=diasNoMes-diaAtual;
+
+  // Receita do mês atual (todos pedidos desse mês, sem filtro de data)
+  const pedMes=APP.pedidos.filter(p=>p.data&&p.data.startsWith(mesAtual)&&p.status!=='Cancelado');
+  const realizadoMes=pedMes.reduce((s,p)=>s+(p.valor||0),0);
+  const pct=metaAtual>0?Math.min(100,realizadoMes/metaAtual*100):0;
+  const falta=Math.max(0,metaAtual-realizadoMes);
+  const mediaDiaNecessaria=diasRestantes>0?falta/diasRestantes:0;
+  const mediaDiaAtual=diaAtual>0?realizadoMes/diaAtual:0;
+  const projecao=mediaDiaAtual*diasNoMes;
+
+  const cor=pct>=100?'var(--green)':pct>=75?'var(--accent)':'var(--red)';
+  const mesLabel=hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+  document.getElementById('metas-progress').innerHTML=metaAtual>0?`
+    <div class="card" style="margin-bottom:15px;">
+      <div class="card-header">
+        <span class="card-title">📊 ${mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1)}</span>
+        <span style="font-family:var(--font-display);font-size:18px;font-weight:700;color:${cor}">${pct.toFixed(1)}%</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:12px;color:var(--text2)">Meta</span>
+          <span style="font-family:var(--font-display);font-weight:700;font-size:15px;">${fmtR(metaAtual)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:12px;color:var(--text2)">Realizado</span>
+          <span style="font-family:var(--font-display);font-weight:700;font-size:15px;color:${cor}">${fmtR(realizadoMes)}</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:100px;height:10px;overflow:hidden;margin-bottom:16px;">
+          <div style="height:100%;border-radius:100px;background:${cor};width:${pct.toFixed(1)}%;transition:width .4s;"></div>
+        </div>
+        <div class="grid3" style="gap:10px;">
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:11px 13px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Falta</div>
+            <div style="font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--red)">${fmtR(falta)}</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:11px 13px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Média/dia necessária</div>
+            <div style="font-family:var(--font-display);font-weight:700;font-size:14px;color:var(--accent)">${fmtR(mediaDiaNecessaria)}</div>
+            <div style="font-size:10px;color:var(--text3)">${diasRestantes} dias restantes</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:11px 13px;text-align:center;">
+            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Projeção do mês</div>
+            <div style="font-family:var(--font-display);font-weight:700;font-size:14px;color:${projecao>=metaAtual?'var(--green)':'var(--red)'}">${fmtR(projecao)}</div>
+            <div style="font-size:10px;color:var(--text3)">${fmtR(mediaDiaAtual)}/dia atual</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `:'<div class="card" style="margin-bottom:15px;"><div class="card-body" style="text-align:center;color:var(--text3);padding:24px;">Nenhuma meta definida para este mês — cadastre acima.</div></div>';
+
+  // Historico de metas com comparativo
+  const mesesComMeta=Object.keys(APP.metas).sort().reverse();
+  document.getElementById('tb-metas').innerHTML=mesesComMeta.map(m=>{
+    const meta=APP.metas[m];
+    const peds=APP.pedidos.filter(p=>p.data&&p.data.startsWith(m)&&p.status!=='Cancelado');
+    const real=peds.reduce((s,p)=>s+(p.valor||0),0);
+    const p=meta>0?real/meta*100:0;
+    const cor=p>=100?'var(--green)':p>=75?'var(--accent)':'var(--red)';
+    const [ano,mes]=m.split('-');
+    const label=new Date(parseInt(ano),parseInt(mes)-1,1).toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+    return`<tr>
+      <td style="font-weight:500">${label}</td>
+      <td>${fmtR(meta)}</td>
+      <td style="color:var(--green);font-weight:600">${fmtR(real)}</td>
+      <td><span style="color:${cor};font-weight:700">${p.toFixed(1)}%</span></td>
+      <td>${p>=100?'<span class="badge bent">✓ Batida</span>':p>=75?'<span class="badge bpend">Próximo</span>':'<span class="badge bcan">Abaixo</span>'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="excluirMeta('${m}')">×</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">Nenhuma meta cadastrada ainda</td></tr>';
+
+  // Comparativo de meses (últimos 6)
+  renderComparativoMeses();
+}
+
+function renderComparativoMeses(){
+  // Build last 6 months
+  const meses=[];
+  const hoje=new Date();
+  for(let i=5;i>=0;i--){
+    const d=new Date(hoje.getFullYear(),hoje.getMonth()-i,1);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label=d.toLocaleDateString('pt-BR',{month:'short'});
+    const peds=APP.pedidos.filter(p=>p.data&&p.data.startsWith(key)&&p.status!=='Cancelado');
+    const total=peds.reduce((s,p)=>s+(p.valor||0),0);
+    const meta=APP.metas?APP.metas[key]||0:0;
+    meses.push({key,label,total,meta,qtd:peds.length});
+  }
+  const maxVal=Math.max(...meses.map(m=>Math.max(m.total,m.meta)),1);
+
+  // Update the comparativo section in dashboard if visible
+  const compEl=document.getElementById('dash-comparativo');
+  if(!compEl)return;
+
+  compEl.innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:10px;height:140px;padding:0 4px;">
+      ${meses.map(m=>{
+        const h=Math.max(4,Math.round(m.total/maxVal*120));
+        const hm=m.meta>0?Math.round(m.meta/maxVal*120):0;
+        const cor=m.meta>0&&m.total>=m.meta?'var(--green)':'var(--accent)';
+        return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--font-display);font-weight:600">${fmtR(m.total).replace('R$ ','')}</div>
+          <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:120px;position:relative;">
+            ${hm>0?`<div style="position:absolute;bottom:${hm}px;left:0;right:0;height:2px;background:var(--red);opacity:.7;border-radius:1px;" title="Meta ${fmtR(m.meta)}"></div>`:''}
+            <div style="width:100%;height:${h}px;background:${cor};border-radius:5px 5px 0 0;opacity:.9;transition:height .3s;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text2);text-transform:capitalize">${m.label}</div>
+          <div style="font-size:9px;color:var(--text3)">${m.qtd} ped.</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px;padding:0 4px;">
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:10px;height:10px;background:var(--accent);border-radius:2px;display:inline-block;"></span>Realizado</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:14px;height:2px;background:var(--red);display:inline-block;opacity:.7;"></span>Meta</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block;"></span>Meta batida</span>
+    </div>
+  `;
+}
+
 function renderRelatorio(){
   const d=filtPeds(true);
   const bruta=d.reduce((s,p)=>s+(p.valor||0),0);
