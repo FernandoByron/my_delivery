@@ -744,7 +744,7 @@ async function syncMetaToFirebase(){
   if(!_db)return;
   try{
     const {doc,setDoc,getFirestore}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await setDoc(doc(_db,'config','meta'),{lojas:APP.lojas,taxas:APP.taxas,dark:APP.dark});
+    await setDoc(doc(_db,'config','meta'),{lojas:APP.lojas,taxas:APP.taxas,metas:APP.metas||{},dark:APP.dark});
   }catch(e){}
 }
 
@@ -842,7 +842,12 @@ window.startFirebaseSync = async function(firebaseConfig){
         const m=snap.data();
         if(m.lojas)APP.lojas=m.lojas;
         if(m.taxas)APP.taxas=m.taxas;
+        if(m.metas)APP.metas=m.metas;
         saveLocal();syncStores();
+        // Atualiza página de metas se estiver aberta
+        if(document.getElementById('page-metas').classList.contains('active'))renderMetas();
+        // Atualiza comparativo no dashboard
+        if(document.getElementById('page-dashboard').classList.contains('active'))renderComparativoMeses();
       }
     });
 
@@ -1476,7 +1481,7 @@ function importBk(e){
       const existCSet=new Set(APP.cancelamentos.map(existCKey));
       const dedupedC=novosCancel.filter(c=>!existCSet.has(existCKey(c)));
       APP.cancelamentos=[...APP.cancelamentos,...dedupedC];
-      if(d.lojas)APP.lojas=d.lojas;if(d.taxas)APP.taxas=d.taxas;
+      if(d.lojas)APP.lojas=d.lojas;if(d.taxas)APP.taxas=d.taxas;if(d.metas)APP.metas={...APP.metas,...d.metas};
       if(d.dark!==undefined)APP.dark=d.dark;
       save();syncStores();applyTheme();refreshAll();
       notify(deduped.length+' pedidos adicionados! Total: '+APP.pedidos.length,'s');
